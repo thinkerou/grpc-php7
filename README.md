@@ -1,12 +1,12 @@
 # grpc-php7-extension
 
-### Reason
+### REASON
 
-- 1. The code forks from [grpc](https://github.com/grpc/grpc/tree/master/src/php).
+- The code forked from [grpc](https://github.com/grpc/grpc/tree/master/src/php).
 
-- 2. Because the php extension only supports PHP5.\*, and hopes it supports PHP7.
+- Because the php extension only supports PHP5.\*, and hopes it supports PHP7.
 
-- 3. Not change the extension code original logic.
+- Not change the extension code original logic.
 
 
 ### TODO
