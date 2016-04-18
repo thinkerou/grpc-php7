@@ -60,7 +60,8 @@ static void free_wrapped_grpc_server_credentials(zend_object *object) {
   if (creds->wrapped != NULL) {
     grpc_server_credentials_release(creds->wrapped);
   }
-  // efree(creds); //TODO(tianou): not need free?
+  // efree(creds); //TODO(thinkerou): not need free?
+  return;
 }
 
 /* Initializes an instace of wrapped_grpc_server_credentials to be associated
@@ -81,12 +82,11 @@ zend_object *create_wrapped_grpc_server_credentials(
 
 void grpc_php_wrap_server_credentials(grpc_server_credentials *wrapped,
                                       zval *server_credentials_object) {
-  //zval server_credentials_object;
   object_init_ex(server_credentials_object, grpc_ce_server_credentials);
   wrapped_grpc_server_credentials *server_credentials =
     Z_WRAPPED_GRPC_SERVER_CREDS_P(server_credentials_object);
   server_credentials->wrapped = wrapped;
-  //return server_credentials_object;
+  return;
 }
 
 /**
@@ -104,6 +104,7 @@ PHP_METHOD(ServerCredentials, createSsl) {
   size_t private_key_length;
   size_t cert_chain_length;
 
+  //TODO(thinkerou): add macro ZEND_PARSE_PARAMETERS_START\END?
   /* "s!ss" == 1 nullable string, 2 strings */
   /* TODO: support multiple key cert pairs. */
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "s!ss", &pem_root_certs,
@@ -140,4 +141,5 @@ void grpc_init_server_credentials() {
     XtOffsetOf(wrapped_grpc_server_credentials, std);
   server_creds_object_handlers_server_creds.free_obj =
     free_wrapped_grpc_server_credentials;
+  return;
 }

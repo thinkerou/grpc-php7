@@ -39,6 +39,7 @@ grpc_completion_queue *completion_queue;
 
 void grpc_php_init_completion_queue() {
   completion_queue = grpc_completion_queue_create(NULL);
+  return;
 }
 
 void grpc_php_shutdown_completion_queue() {
@@ -47,4 +48,5 @@ void grpc_php_shutdown_completion_queue() {
                                     gpr_inf_future(GPR_CLOCK_REALTIME),
                                     NULL).type != GRPC_QUEUE_SHUTDOWN);
   grpc_completion_queue_destroy(completion_queue);
+  return;
 }

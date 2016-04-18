@@ -71,7 +71,8 @@ static void free_wrapped_grpc_server(zend_object *object) {
                                 gpr_inf_future(GPR_CLOCK_REALTIME), NULL);
     grpc_server_destroy(server->wrapped);
   }
-  // efree(server); //TODO(tianou): not need free?
+  // efree(server); //TODO(thinkerou): not need free?
+  return;
 }
 
 /* Initializes an instance of wrapped_grpc_call to be associated with an object
@@ -107,10 +108,10 @@ PHP_METHOD(Server, __construct) {
     return;
   }
 #else
-    ZEND_PARSE_PARAMETERS_START(0, 1)
-        Z_PARAM_OPTIONAL
-        Z_PARAM_ZVAL(args_array)
-    ZEND_PARSE_PARAMETERS_END();
+  ZEND_PARSE_PARAMETERS_START(0, 1)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_ZVAL(args_array)
+  ZEND_PARSE_PARAMETERS_END();
 #endif
   /*
   if (args_array == NULL) {
@@ -150,9 +151,8 @@ PHP_METHOD(Server, requestCall) {
   grpc_call *call;
   grpc_call_details details;
   grpc_metadata_array metadata;
-  //zval result;
   grpc_event event;
-  //object_init(&result);
+
   object_init(return_value);
   grpc_call_details_init(&details);
   grpc_metadata_array_init(&metadata);
@@ -171,11 +171,12 @@ PHP_METHOD(Server, requestCall) {
                          "Failed to request a call for some reason", 1);
     goto cleanup;
   }
+  //TODO(thinkerou): use zval or zval*?
   zval zv_call;
-  grpc_php_wrap_call(call, true, &zv_call);
   zval zv_timeval;
-  grpc_php_wrap_timeval(details.deadline, &zv_timeval);
   zval zv_md;
+  grpc_php_wrap_call(call, true, &zv_call);
+  grpc_php_wrap_timeval(details.deadline, &zv_timeval);
   grpc_parse_metadata_array(&metadata, &zv_md);
   
   add_property_zval(return_value, "call", &zv_call);
@@ -273,4 +274,5 @@ void grpc_init_server() {
          sizeof(zend_object_handlers));
   server_object_handlers_server.offset = XtOffsetOf(wrapped_grpc_server, std);
   server_object_handlers_server.free_obj = free_wrapped_grpc_server;
+  return;
 }

@@ -53,7 +53,6 @@ extern zend_class_entry *grpc_ce_server_credentials;
  * object */
 typedef struct wrapped_grpc_server_credentials {
   grpc_server_credentials *wrapped;
-
   zend_object std;
 } wrapped_grpc_server_credentials;
 

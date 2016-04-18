@@ -76,4 +76,5 @@ void byte_buffer_to_string(grpc_byte_buffer *buffer, char **out_string,
   }
   *out_string = string;
   *out_length = length;
+  return;
 }

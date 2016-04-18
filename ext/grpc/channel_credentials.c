@@ -61,7 +61,8 @@ static void free_wrapped_grpc_channel_credentials(zend_object *object) {
   if (creds->wrapped != NULL) {
     grpc_channel_credentials_release(creds->wrapped);
   }
-  // efree(creds); //TODO(tianou): not need free?
+  // efree(creds); //TODO(thinkerou): not need free?
+  return;
 }
 
 /* Initializes an instance of wrapped_grpc_channel_credentials to be
@@ -82,12 +83,11 @@ zend_object *create_wrapped_grpc_channel_credentials(
 
 void grpc_php_wrap_channel_credentials(grpc_channel_credentials *wrapped,
                                       zval *credentials_object) {
-  //zval credentials_object;
   object_init_ex(credentials_object, grpc_ce_channel_credentials);
   wrapped_grpc_channel_credentials *credentials =
     Z_WRAPPED_GRPC_CHANNEL_CREDS_P(credentials_object);
   credentials->wrapped = wrapped;
-  //return credentials_object;
+  return;
 }
 
 /**
@@ -120,7 +120,6 @@ PHP_METHOD(ChannelCredentials, createSsl) {
   pem_key_cert_pair.private_key = pem_key_cert_pair.cert_chain = NULL;
 
   /* "|s!s!s! == 3 optional nullable strings */
-//#ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s!s!s!",
                             &pem_root_certs, &root_certs_length,
                             &pem_key_cert_pair.private_key,
@@ -131,12 +130,6 @@ PHP_METHOD(ChannelCredentials, createSsl) {
                          "createSsl expects 3 optional strings", 1);
     return;
   }
-/*#else
-  ZEND_PARSE_PARAMETERS_START(0, 3)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_
-  ZEND_PARSE_PARAMETERS_END();
-#endif*/
 
   grpc_channel_credentials *creds = grpc_ssl_credentials_create(
       pem_root_certs,
@@ -215,4 +208,5 @@ void grpc_init_channel_credentials() {
     XtOffsetOf(wrapped_grpc_channel_credentials, std);
   channel_creds_object_handlers_channel_creds.free_obj =
     free_wrapped_grpc_channel_credentials;
+  return;
 }

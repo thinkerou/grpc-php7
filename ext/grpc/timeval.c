@@ -57,6 +57,7 @@ static zend_object_handlers timeval_object_handlers_timeval;
 /* Frees and destroys an instance of wrapped_grpc_call */
 static void free_wrapped_grpc_timeval(zend_object *object) {
   // efree(object); //TODO(thinkerou): not need free?
+  return;
 }
 
 /* Initializes an instance of wrapped_grpc_timeval to be associated with an
@@ -78,6 +79,7 @@ void grpc_php_wrap_timeval(gpr_timespec wrapped, zval *timeval_object) {
   object_init_ex(timeval_object, grpc_ce_timeval);
   wrapped_grpc_timeval *timeval = Z_WRAPPED_GRPC_TIMEVAL_P(timeval_object);
   memcpy(&timeval->wrapped, &wrapped, sizeof(gpr_timespec));
+  return;
 }
 
 /**
@@ -304,8 +306,10 @@ void grpc_init_timeval() {
   timeval_object_handlers_timeval.offset =
     XtOffsetOf(wrapped_grpc_timeval, std);
   timeval_object_handlers_timeval.free_obj = free_wrapped_grpc_timeval;
+  return;
 }
 
 void grpc_shutdown_timeval() {
   //TODO(thinkerou): should do what?
+  return;
 }

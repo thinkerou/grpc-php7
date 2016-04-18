@@ -67,7 +67,8 @@ static void free_wrapped_grpc_call(zend_object *object) {
   if (call->owned && call->wrapped != NULL) {
     grpc_call_destroy(call->wrapped);
   }
-  // efree(object); //TODO(tianou): not need free?
+  // efree(object); //TODO(thinkerou): not need free?
+  return;
 }
 
 /* Initializes an instance of wrapped_grpc_call to be associated with an object
@@ -88,14 +89,11 @@ zend_object *create_wrapped_grpc_call(zend_class_entry *class_type) {
 /* Wraps a grpc_call struct in a PHP object. Owned indicates whether the struct
    should be destroyed at the end of the object's lifecycle */
 void grpc_php_wrap_call(grpc_call *wrapped, bool owned, zval *call_object) {
-  //zval call_object;
   object_init_ex(call_object, grpc_ce_call);
-  
   wrapped_grpc_call *call = Z_WRAPPED_GRPC_CALL_P(call_object);
   call->wrapped = wrapped;
-  call->owned = owned; //TODO(tiaou): need?
-  
-  //return call_object;
+  call->owned = owned; //TODO(thinkerou): need?
+  return;
 }
 
 /* Creates and returns a PHP array object with the data in a
@@ -104,7 +102,6 @@ void grpc_parse_metadata_array(grpc_metadata_array *metadata_array, zval *array)
   int count = metadata_array->count;
   grpc_metadata *elements = metadata_array->metadata;
   int i;
-  //zval array;
   zval *data;
   HashTable *array_hash;
   zval inner_array;
@@ -113,7 +110,6 @@ void grpc_parse_metadata_array(grpc_metadata_array *metadata_array, zval *array)
   size_t key_len;
   
   array_init(array);
-  //array_hash = Z_ARRVAL_P(&array);
   array_hash = HASH_OF(array);
   grpc_metadata *elem;
   for (i = 0; i < count; i++) {
@@ -157,7 +153,6 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
     return false;
   }
   grpc_metadata_array_init(metadata);
-  //array_hash = Z_ARRVAL_P(array);
   array_hash = HASH_OF(array);
   for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (inner_array = zend_hash_get_current_data_ex(array_hash,
@@ -170,7 +165,6 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
     if (Z_TYPE_P(inner_array) != IS_ARRAY) {
       return false;
     }
-    //inner_array_hash = Z_ARRVAL_P(inner_array);
     inner_array_hash = HASH_OF(inner_array);
     metadata->capacity += zend_hash_num_elements(inner_array_hash);
   }
@@ -183,7 +177,6 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
                                      &array_pointer) != HASH_KEY_IS_STRING) {
       return false;
     }
-    //inner_array_hash = Z_ARRVAL_P(inner_array);
     inner_array_hash = HASH_OF(inner_array);
     for (zend_hash_internal_pointer_reset_ex(inner_array_hash,
                                              &inner_array_pointer);
@@ -286,7 +279,6 @@ PHP_METHOD(Call, startBatch) {
   grpc_byte_buffer *message;
   int cancelled;
   grpc_call_error error;
-  //zval result;
   char *message_str;
   size_t message_len;
   zval recv_status;
@@ -310,7 +302,6 @@ PHP_METHOD(Call, startBatch) {
   ZEND_PARSE_PARAMETERS_END();
 #endif
 
-  //array_hash = Z_ARRVAL_P(array);
   array_hash = HASH_OF(array);
   for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (value = zend_hash_get_current_data_ex(array_hash,
@@ -338,7 +329,6 @@ PHP_METHOD(Call, startBatch) {
                                "Expected an array for send message", 1);
           goto cleanup;
         }
-        //message_hash = Z_ARRVAL_P(value);
         message_hash = HASH_OF(value);
         if ((message_flags = zend_hash_str_find(message_hash, "flags",
                                                 sizeof("flags") - 1)) != NULL) {
@@ -362,7 +352,6 @@ PHP_METHOD(Call, startBatch) {
       case GRPC_OP_SEND_CLOSE_FROM_CLIENT:
         break;
       case GRPC_OP_SEND_STATUS_FROM_SERVER:
-        //status_hash = Z_ARRVAL_P(value);
         status_hash = HASH_OF(value);
         if ((inner_value = zend_hash_str_find(
             status_hash, "metadata", sizeof("metadata") - 1)) != NULL) {
@@ -573,4 +562,5 @@ void grpc_init_call() {
          sizeof(zend_object_handlers));
   call_object_handlers_call.offset = XtOffsetOf(wrapped_grpc_call, std);
   call_object_handlers_call.free_obj = free_wrapped_grpc_call;
+  return;
 }

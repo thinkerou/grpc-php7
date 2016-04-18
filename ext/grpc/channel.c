@@ -66,7 +66,8 @@ static void free_wrapped_grpc_channel(zend_object *object) {
   if (channel->wrapped != NULL) {
     grpc_channel_destroy(channel->wrapped);
   }
-  // efree(channel); //TODO(tianou): not need free?
+  // efree(channel); //TODO(thinkerou): not need free?
+  return;
 }
 
 /* Initializes an instance of wrapped_grpc_channel to be associated with an
@@ -91,7 +92,6 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
   zval *data;
   zend_string *key;
   zend_ulong index;
-  //array_hash = Z_ARRVAL_P(args_array);
   array_hash = HASH_OF(args_array);
   if (!array_hash) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
@@ -128,6 +128,7 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
     }
     args_index++;
   }
+  return;
 }
 
 /**
@@ -162,7 +163,6 @@ PHP_METHOD(Channel, __construct) {
   ZEND_PARSE_PARAMETERS_END();
 #endif
 
-  //array_hash = Z_ARRVAL_P(args_array);
   array_hash = HASH_OF(args_array);
   if ((creds_obj = zend_hash_str_find(array_hash, "credentials",
                                       sizeof("credentials") - 1)) != NULL) {
@@ -295,4 +295,5 @@ void grpc_init_channel() {
   channel_object_handlers_channel.offset =
     XtOffsetOf(wrapped_grpc_channel, std);
   channel_object_handlers_channel.free_obj = free_wrapped_grpc_channel;
+  return;
 }

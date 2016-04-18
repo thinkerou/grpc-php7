@@ -62,7 +62,8 @@ static void free_wrapped_grpc_call_credentials(zend_object *object) {
   if (creds->wrapped != NULL) {
     grpc_call_credentials_release(creds->wrapped);
   }
-  //efree(creds); //TODO(tianou): not need free?
+  // efree(creds); //TODO(thinkerou): not need free?
+  return;
 }
 
 /* Initializes an instance of wrapped_grpc_call_credentials to be
@@ -83,12 +84,11 @@ zend_object *create_wrapped_grpc_call_credentials(
 
 void grpc_php_wrap_call_credentials(grpc_call_credentials *wrapped,
                                     zval *credentials_object) {
-  //zval credentials_object;
   object_init_ex(credentials_object, grpc_ce_call_credentials);
   wrapped_grpc_call_credentials *credentials =
     Z_WRAPPED_GRPC_CALL_CREDS_P(credentials_object);
   credentials->wrapped = wrapped;
-  //return credentials_object;
+  return;
 }
 
 /**
@@ -141,8 +141,7 @@ PHP_METHOD(CallCredentials, createFromPlugin) {
   memset(fci_cache, 0, sizeof(zend_fcall_info_cache));
 
   /* "f" == 1 function */
-  //TODO(tianou): f, use FAST_ZPP, how?
-//#ifndef FAST_ZPP
+  //TODO(tianou): f, use FAST_ZPP, how do?
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "f", fci,
                             fci_cache, fci->params,
                             fci->param_count) == FAILURE) {
@@ -150,12 +149,6 @@ PHP_METHOD(CallCredentials, createFromPlugin) {
                          "createFromPlugin expects 1 callback", 1);
     return;
   }
-/*#else
-  ZEND_PARSE_PARAMETERS_START(1, 1)
-    Z_PARAM_FUNC(*fci, *fci_cache)
-    Z_PARAM_VARIADIC("*", fci->params, fci->param_count)
-  ZEND_PARSE_PARAMETERS_END();
-#endif*/
 
   plugin_state *state;
   state = (plugin_state *)emalloc(sizeof(plugin_state));
@@ -200,6 +193,7 @@ void plugin_get_metadata(void *ptr, grpc_auth_metadata_context context,
   if (Z_TYPE_P(&retval) != IS_ARRAY) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "plugin callback must return metadata array", 1);
+    return;
   }
 
   grpc_metadata_array metadata;
@@ -207,6 +201,7 @@ void plugin_get_metadata(void *ptr, grpc_auth_metadata_context context,
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "invalid metadata", 1);
     grpc_metadata_array_destroy(&metadata);
+    return;
   }
 
   /* TODO: handle error */
@@ -214,6 +209,7 @@ void plugin_get_metadata(void *ptr, grpc_auth_metadata_context context,
 
   /* Pass control back to core */
   cb(user_data, metadata.metadata, metadata.count, code, NULL);
+  return;
 }
 
 /* Cleanup function for plugin creds API */
@@ -222,6 +218,7 @@ void plugin_destroy_state(void *ptr) {
   efree(state->fci);
   efree(state->fci_cache);
   efree(state);
+  return;
 }
 
 static zend_function_entry call_credentials_methods[] = {
@@ -244,4 +241,5 @@ void grpc_init_call_credentials(TSRMLS_D) {
     XtOffsetOf(wrapped_grpc_call_credentials, std);
   call_creds_object_handlers_call_creds.free_obj =
     free_wrapped_grpc_call_credentials;
+  return;
 }
