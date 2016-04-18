@@ -56,7 +56,7 @@ static zend_object_handlers timeval_object_handlers_timeval;
 
 /* Frees and destroys an instance of wrapped_grpc_call */
 static void free_wrapped_grpc_timeval(zend_object *object) {
-  //efree(object); //TODO(tianou): not need free?
+  // efree(object); //TODO(thinkerou): not need free?
 }
 
 /* Initializes an instance of wrapped_grpc_timeval to be associated with an
@@ -75,11 +75,9 @@ zend_object *create_wrapped_grpc_timeval(zend_class_entry *class_type) {
 }
 
 void grpc_php_wrap_timeval(gpr_timespec wrapped, zval *timeval_object) {
-  //zval timeval_object;
   object_init_ex(timeval_object, grpc_ce_timeval);
   wrapped_grpc_timeval *timeval = Z_WRAPPED_GRPC_TIMEVAL_P(timeval_object);
   memcpy(&timeval->wrapped, &wrapped, sizeof(gpr_timespec));
-  //return timeval_object;
 }
 
 /**
@@ -132,7 +130,6 @@ PHP_METHOD(Timeval, add) {
 
   wrapped_grpc_timeval *self = Z_WRAPPED_GRPC_TIMEVAL_P(getThis());
   wrapped_grpc_timeval *other = Z_WRAPPED_GRPC_TIMEVAL_P(other_obj);
-  //zval sum;
   grpc_php_wrap_timeval(gpr_time_add(self->wrapped, other->wrapped), return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
@@ -162,9 +159,8 @@ PHP_METHOD(Timeval, subtract) {
 
   wrapped_grpc_timeval *self = Z_WRAPPED_GRPC_TIMEVAL_P(getThis());
   wrapped_grpc_timeval *other = Z_WRAPPED_GRPC_TIMEVAL_P(other_obj);
-  //zval diff;
-  grpc_php_wrap_timeval(gpr_time_sub(self->wrapped,
-                                                 other->wrapped), return_value);
+  grpc_php_wrap_timeval(gpr_time_sub(self->wrapped, other->wrapped),
+                        return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
 
@@ -242,7 +238,6 @@ PHP_METHOD(Timeval, similar) {
  * @return Timeval The current time
  */
 PHP_METHOD(Timeval, now) {
-  //zval now;
   grpc_php_wrap_timeval(gpr_now(GPR_CLOCK_REALTIME), return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
@@ -252,7 +247,6 @@ PHP_METHOD(Timeval, now) {
  * @return Timeval Zero length time interval
  */
 PHP_METHOD(Timeval, zero) {
-  //zval grpc_php_timeval_zero;
   grpc_php_wrap_timeval(gpr_time_0(GPR_CLOCK_REALTIME), return_value);
   RETURN_ZVAL(return_value,
               false, /* Copy original before returning? */
@@ -264,7 +258,6 @@ PHP_METHOD(Timeval, zero) {
  * @return Timeval Infinite future time value
  */
 PHP_METHOD(Timeval, infFuture) {
-  //zval grpc_php_timeval_inf_future;
   grpc_php_wrap_timeval(gpr_inf_future(GPR_CLOCK_REALTIME), return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
@@ -274,7 +267,6 @@ PHP_METHOD(Timeval, infFuture) {
  * @return Timeval Infinite past time value
  */
 PHP_METHOD(Timeval, infPast) {
-  //zval grpc_php_timeval_inf_past;
   grpc_php_wrap_timeval(gpr_inf_past(GPR_CLOCK_REALTIME), return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
@@ -315,4 +307,5 @@ void grpc_init_timeval() {
 }
 
 void grpc_shutdown_timeval() {
+  //TODO(thinkerou): should do what?
 }
