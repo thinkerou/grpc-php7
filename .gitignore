@@ -7,7 +7,7 @@ autom4te.cache/
 .deps
 acinclude.m4
 aclocal.m4
-config.*
+xconfig.*
 configure*
 Makefile*
 run-tests.php
