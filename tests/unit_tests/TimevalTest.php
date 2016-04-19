@@ -33,14 +33,14 @@
  */
 class TimevalTest extends PHPUnit_Framework_TestCase
 {
-    public function setUP()
+    public function setUp()
     {
     }
 
     public function tearDown()
     {
     }
-
+    
     public function testCompareSame()
     {
         $zero = Grpc\Timeval::zero();
