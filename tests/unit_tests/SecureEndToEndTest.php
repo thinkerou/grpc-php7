@@ -62,6 +62,18 @@ class SecureEndToEndTest extends PHPUnit_Framework_TestCase
         unset($this->server);
     }
 
+    public function setErrorHandler()
+    {
+        set_error_handler(
+            function($errno, $errstr, $errfile, $errline, array $errcontext) {
+                if (0 === error_reporting()) {
+                    return false;
+                }
+                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+            }
+        );
+    }
+
     public function testSimpleRequestBody()
     {
         $deadline = Grpc\Timeval::infFuture();

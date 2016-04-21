@@ -47,6 +47,18 @@ class EndToEndTest extends PHPUnit_Framework_TestCase
         unset($this->server);
     }
 
+    public function setErrorHandler()
+    {
+        set_error_handler(
+            function($errno, $errstr, $errfile, $errline, array $errcontext) {
+                if (0 === error_reporting()) {
+                    return false;
+                }
+                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+            }
+        );
+    }
+
     public function testSimpleRequestBody()
     {
         $deadline = Grpc\Timeval::infFuture();
@@ -388,7 +400,7 @@ class EndToEndTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException InvalidArgumentException 
      */
     public function testInvalidServerStatusDetails()
     {
@@ -569,28 +581,31 @@ class EndToEndTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testGetConnectivityStateInvalidParam()
     {
+        $this->setErrorHandler();
         $this->assertTrue($this->channel->getConnectivityState(
             new Grpc\Timeval));
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testWatchConnectivityStateInvalidParam()
     {
+        $this->setErrorHandler();
         $this->assertTrue($this->channel->watchConnectivityState(
             0, 1000));
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testChannelConstructorInvalidParam()
     {
+        $this->setErrorHandler();
         $this->channel = new Grpc\Channel('localhost:'.$this->port, NULL);
     }
 

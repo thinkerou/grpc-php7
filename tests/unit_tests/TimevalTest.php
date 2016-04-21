@@ -40,7 +40,19 @@ class TimevalTest extends PHPUnit_Framework_TestCase
     public function tearDown()
     {
     }
-    
+
+    public function setErrorHandler()
+    {
+        set_error_handler(
+            function($errno, $errstr, $errfile, $errline, array $errcontext) {
+                if (0 === error_reporting()) {
+                    return false;
+                }
+                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+            }
+        );
+    }
+
     public function testCompareSame()
     {
         $zero = Grpc\Timeval::zero();
@@ -123,44 +135,49 @@ class TimevalTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException 
      */
     public function testConstructorInvalidParam()
     {
+        $this->setErrorHandler();
         $delta = new Grpc\Timeval('abc');
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testAddInvalidParam()
     {
+        $this->setErrorHandler();
         $a = Grpc\Timeval::now();
         $a->add(1000);
     }
  
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testSubtractInvalidParam()
     {
+        $this->setErrorHandler();
         $a = Grpc\Timeval::now();
         $a->subtract(1000);
     }
  
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testCompareInvalidParam()
     {
+        $this->setErrorHandler();
         $a = Grpc\Timeval::compare(1000, 1100);
     }
  
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testSimilarInvalidParam()
     {
+        $this->setErrorHandler();
         $a = Grpc\Timeval::similar(1000, 1100, 1200);
     }
 }

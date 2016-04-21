@@ -42,6 +42,18 @@ class ServerTest extends PHPUnit_Framework_TestCase
     {
     }
 
+    public function setErrorHandler()
+    {
+        set_error_handler(
+            function($errno, $errstr, $errfile, $errline, array $errcontext) {
+                if (0 === error_reporting()) {
+                    return false;
+                }
+                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+            }
+        );
+    }
+
     /**
      * @expectedException InvalidArgumentException
      */
@@ -51,21 +63,22 @@ class ServerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testInvalidAddHttp2Port()
     {
+        $this->setErrorHandler();
         $this->server = new Grpc\Server([]);
         $this->port = $this->server->addHttp2Port(['0.0.0.0:0']);
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testInvalidAddSecureHttp2Port()
     {
+        $this->setErrorHandler();
         $this->server = new Grpc\Server([]);
         $this->port = $this->server->addSecureHttp2Port(['0.0.0.0:0']);
     }
-
 }

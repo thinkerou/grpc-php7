@@ -12,7 +12,7 @@
 ### TODO
 
 - [ ] Add phpt test case
-- [ ] Upgate phpunit, because added macro `ZEND_PARSE_PARAMETERS_START\END`
+- [X] Upgate phpunit, because added macro `ZEND_PARSE_PARAMETERS_START\END`
 - [ ] Check memory using Valgrind
 - [ ] Review code for checking `zval` or `zval*` for using right
 

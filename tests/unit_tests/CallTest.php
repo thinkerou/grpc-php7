@@ -54,6 +54,18 @@ class CallTest extends PHPUnit_Framework_TestCase
     {
     }
 
+    public function setErrorHandler()
+    {
+        set_error_handler(
+            function($errno, $errstr, $errfile, $errline, array $errcontext) {
+                if (0 === error_reporting()) {
+                    return false;
+                }
+                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+            }
+        );
+    }
+
     public function testAddEmptyMetadata()
     {
         $batch = [
