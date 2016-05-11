@@ -63,10 +63,10 @@ static zend_object_handlers channel_object_handlers_channel;
 /* Frees and destroys an instance of wrapped_grpc_channel */
 static void free_wrapped_grpc_channel(zend_object *object) {
   wrapped_grpc_channel *channel = wrapped_grpc_channel_from_obj(object);
+  zend_object_std_dtor(&channel->std);
   if (channel->wrapped != NULL) {
     grpc_channel_destroy(channel->wrapped);
   }
-  // efree(channel); //TODO(thinkerou): not need free?
   return;
 }
 
@@ -101,10 +101,11 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
   args->num_args = zend_hash_num_elements(array_hash);
   args->args = ecalloc(args->num_args, sizeof(grpc_arg));
   args_index = 0;
-  for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
+  ZEND_HASH_FOREACH_VAL(array_hash, data) {
+  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (data = zend_hash_get_current_data_ex(array_hash,
                                              &array_pointer)) != NULL;
-       zend_hash_move_forward_ex(array_hash, &array_pointer)) {
+       zend_hash_move_forward_ex(array_hash, &array_pointer)) {*/
     if (zend_hash_get_current_key_ex(array_hash, &key, &index,
                                      &array_pointer) != HASH_KEY_IS_STRING) {
       zend_throw_exception(spl_ce_InvalidArgumentException,
@@ -128,6 +129,7 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
     }
     args_index++;
   }
+  ZEND_HASH_FOREACH_END();
   return;
 }
 

@@ -56,7 +56,8 @@ static zend_object_handlers timeval_object_handlers_timeval;
 
 /* Frees and destroys an instance of wrapped_grpc_call */
 static void free_wrapped_grpc_timeval(zend_object *object) {
-  // efree(object); //TODO(thinkerou): not need free?
+  wrapped_grpc_timeval *timeval = wrapped_grpc_timeval_from_obj(object);
+  zend_object_std_dtor(&timeval->std);
   return;
 }
 
@@ -310,6 +311,5 @@ void grpc_init_timeval() {
 }
 
 void grpc_shutdown_timeval() {
-  //TODO(thinkerou): should do what?
   return;
 }

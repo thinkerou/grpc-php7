@@ -60,7 +60,7 @@ static void free_wrapped_grpc_server_credentials(zend_object *object) {
   if (creds->wrapped != NULL) {
     grpc_server_credentials_release(creds->wrapped);
   }
-  // efree(creds); //TODO(thinkerou): not need free?
+  zend_object_std_dtor(&creds->std);
   return;
 }
 
@@ -106,6 +106,7 @@ PHP_METHOD(ServerCredentials, createSsl) {
 
   //TODO(thinkerou): add macro ZEND_PARSE_PARAMETERS_START\END?
   /* "s!ss" == 1 nullable string, 2 strings */
+#ifndef FAST_ZPP
   /* TODO: support multiple key cert pairs. */
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "s!ss", &pem_root_certs,
                             &root_certs_length, &pem_key_cert_pair.private_key,
@@ -115,6 +116,14 @@ PHP_METHOD(ServerCredentials, createSsl) {
                          "createSsl expects 3 strings", 1);
     return;
   }
+#else
+  ZEND_PARSE_PARAMETERS_START(3, 3)
+    Z_PARAM_STRING(pem_root_certs, root_certs_length)
+    Z_PARAM_STRING(pem_key_cert_pair.private_key, private_key_length)
+    Z_PARAM_STRING(pem_key_cert_pair.cert_chain, cert_chain_length)
+  ZEND_PARSE_PARAMETERS_END();
+#endif
+
   /* TODO: add a client_certificate_request field in ServerCredentials and pass
    * it as the last parameter. */
   grpc_server_credentials *creds = grpc_ssl_server_credentials_create_ex(

@@ -64,10 +64,10 @@ static zend_object_handlers call_object_handlers_call;
 /* Frees and destroys an instance of wrapped_grpc_call */
 static void free_wrapped_grpc_call(zend_object *object) {
   wrapped_grpc_call *call = wrapped_grpc_call_from_obj(object);
+  zend_object_std_dtor(&call->std);
   if (call->owned && call->wrapped != NULL) {
     grpc_call_destroy(call->wrapped);
   }
-  // efree(object); //TODO(thinkerou): not need free?
   return;
 }
 
@@ -146,7 +146,7 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
   HashTable *array_hash;
   HashPosition array_pointer;
   HashTable *inner_array_hash;
-  HashPosition inner_array_pointer;
+  //HashPosition inner_array_pointer;
   zend_string *key;
   zend_ulong index;
   if (Z_TYPE_P(array) != IS_ARRAY) {
@@ -154,10 +154,12 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
   }
   grpc_metadata_array_init(metadata);
   array_hash = HASH_OF(array);
-  for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
+
+  ZEND_HASH_FOREACH_VAL(array_hash, inner_array) {
+  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (inner_array = zend_hash_get_current_data_ex(array_hash,
                                                     &array_pointer)) != NULL;
-       zend_hash_move_forward_ex(array_hash, &array_pointer)) {
+       zend_hash_move_forward_ex(array_hash, &array_pointer)) {*/
     if (zend_hash_get_current_key_ex(array_hash, &key, &index,
                                      &array_pointer) != HASH_KEY_IS_STRING) {
       return false;
@@ -168,21 +170,27 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
     inner_array_hash = HASH_OF(inner_array);
     metadata->capacity += zend_hash_num_elements(inner_array_hash);
   }
+  ZEND_HASH_FOREACH_END();
+
   metadata->metadata = gpr_malloc(metadata->capacity * sizeof(grpc_metadata));
-  for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
+ 
+  ZEND_HASH_FOREACH_VAL(array_hash, inner_array) {
+  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (inner_array = zend_hash_get_current_data_ex(array_hash,
                                                     &array_pointer)) != NULL;
-       zend_hash_move_forward_ex(array_hash, &array_pointer)) {
+       zend_hash_move_forward_ex(array_hash, &array_pointer)) {*/
     if (zend_hash_get_current_key_ex(array_hash, &key, &index,
                                      &array_pointer) != HASH_KEY_IS_STRING) {
       return false;
     }
     inner_array_hash = HASH_OF(inner_array);
-    for (zend_hash_internal_pointer_reset_ex(inner_array_hash,
+
+    ZEND_HASH_FOREACH_VAL(inner_array_hash, value) {
+    /*for (zend_hash_internal_pointer_reset_ex(inner_array_hash,
                                              &inner_array_pointer);
          (value = zend_hash_get_current_data_ex(inner_array_hash,
                                                 &inner_array_pointer)) != NULL;
-         zend_hash_move_forward_ex(inner_array_hash, &inner_array_pointer)) {
+         zend_hash_move_forward_ex(inner_array_hash, &inner_array_pointer)) {*/
       if (Z_TYPE_P(value) != IS_STRING) {
         return false;
       }
@@ -191,7 +199,9 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
       metadata->metadata[metadata->count].value_length = Z_STRLEN_P(value);
       metadata->count += 1;
     }
+    ZEND_HASH_FOREACH_END();
   }
+  ZEND_HASH_FOREACH_END();
   return true;
 }
 
@@ -303,10 +313,11 @@ PHP_METHOD(Call, startBatch) {
 #endif
 
   array_hash = HASH_OF(array);
-  for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
+  ZEND_HASH_FOREACH_VAL(array_hash, value) {
+  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (value = zend_hash_get_current_data_ex(array_hash,
                                               &array_pointer)) != NULL;
-       zend_hash_move_forward_ex(array_hash, &array_pointer)) {
+       zend_hash_move_forward_ex(array_hash, &array_pointer)) {*/
     if (zend_hash_get_current_key_ex(array_hash, &key, &index,
                                      &array_pointer) != HASH_KEY_IS_LONG) {
       zend_throw_exception(spl_ce_InvalidArgumentException,
@@ -422,6 +433,8 @@ PHP_METHOD(Call, startBatch) {
     ops[op_num].reserved = NULL;
     op_num++;
   }
+  ZEND_HASH_FOREACH_END();
+
   error = grpc_call_start_batch(call->wrapped, ops, op_num,
                                 call->wrapped, NULL);
   if (error != GRPC_CALL_OK) {

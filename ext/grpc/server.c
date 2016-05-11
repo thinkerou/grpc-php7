@@ -71,7 +71,7 @@ static void free_wrapped_grpc_server(zend_object *object) {
                                 gpr_inf_future(GPR_CLOCK_REALTIME), NULL);
     grpc_server_destroy(server->wrapped);
   }
-  // efree(server); //TODO(thinkerou): not need free?
+  zend_object_std_dtor(&server->std);
   return;
 }
 

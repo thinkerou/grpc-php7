@@ -4,7 +4,7 @@
 
 - The code forked from [grpc](https://github.com/grpc/grpc/tree/master/src/php).
 
-- Because the php extension only supports PHP5.\*, and hopes it supports PHP7.
+- Because the php extension only supports PHP5.x, and hopes it supports PHP7.
 
 - Not change the extension code original logic.
 

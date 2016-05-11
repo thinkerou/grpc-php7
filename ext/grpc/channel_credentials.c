@@ -58,10 +58,10 @@ static zend_object_handlers channel_creds_object_handlers_channel_creds;
 static void free_wrapped_grpc_channel_credentials(zend_object *object) {
   wrapped_grpc_channel_credentials *creds =
     wrapped_grpc_channel_creds_from_obj(object);
+  zend_object_std_dtor(&creds->std);
   if (creds->wrapped != NULL) {
     grpc_channel_credentials_release(creds->wrapped);
   }
-  // efree(creds); //TODO(thinkerou): not need free?
   return;
 }
 
