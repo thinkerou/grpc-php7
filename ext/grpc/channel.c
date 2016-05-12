@@ -77,7 +77,7 @@ zend_object *create_wrapped_grpc_channel(zend_class_entry *class_type) {
   intern = ecalloc(1, sizeof(wrapped_grpc_channel) +
                    zend_object_properties_size(class_type));
   
-  zend_object_std_init(&intern->std, class_type TSRMLS_CC);
+  zend_object_std_init(&intern->std, class_type);
   object_properties_init(&intern->std, class_type);
 
   intern->std.handlers = &channel_object_handlers_channel;
@@ -213,7 +213,7 @@ PHP_METHOD(Channel, getConnectivityState) {
 
   /* "|b" == 1 optional bool */
 #ifndef FAST_ZPP
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|b",
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "|b",
                             &try_to_connect) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "getConnectivityState expects a bool", 1);
@@ -244,7 +244,7 @@ PHP_METHOD(Channel, watchConnectivityState) {
 
   /* "lO" == 1 long 1 object */
 #ifndef FAST_ZPP
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lO",
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "lO",
           &last_state, &deadline_obj, grpc_ce_timeval) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
         "watchConnectivityState expects 1 long 1 timeval", 1);

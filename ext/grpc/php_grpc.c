@@ -230,14 +230,14 @@ PHP_MINIT_FUNCTION(grpc) {
                          GRPC_CHANNEL_FATAL_FAILURE,
                          CONST_CS | CONST_PERSISTENT);
 
-  grpc_init_call(TSRMLS_C);
-  grpc_init_channel(TSRMLS_C);
-  grpc_init_server(TSRMLS_C);
-  grpc_init_timeval(TSRMLS_C);
-  grpc_init_channel_credentials(TSRMLS_C);
-  grpc_init_call_credentials(TSRMLS_C);
-  grpc_init_server_credentials(TSRMLS_C);
-  grpc_php_init_completion_queue(TSRMLS_C);
+  grpc_init_call();
+  grpc_init_channel();
+  grpc_init_server();
+  grpc_init_timeval();
+  grpc_init_channel_credentials();
+  grpc_init_call_credentials();
+  grpc_init_server_credentials();
+  grpc_php_init_completion_queue();
   return SUCCESS;
 }
 /* }}} */
@@ -248,8 +248,8 @@ PHP_MSHUTDOWN_FUNCTION(grpc) {
   /* uncomment this line if you have INI entries
   UNREGISTER_INI_ENTRIES();
   */
-  grpc_shutdown_timeval(TSRMLS_C);
-  grpc_php_shutdown_completion_queue(TSRMLS_C);
+  grpc_shutdown_timeval();
+  grpc_php_shutdown_completion_queue();
   grpc_shutdown();
   return SUCCESS;
 }
