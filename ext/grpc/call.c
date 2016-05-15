@@ -64,10 +64,10 @@ static zend_object_handlers call_object_handlers_call;
 /* Frees and destroys an instance of wrapped_grpc_call */
 static void free_wrapped_grpc_call(zend_object *object) {
   wrapped_grpc_call *call = wrapped_grpc_call_from_obj(object);
-  zend_object_std_dtor(&call->std);
   if (call->owned && call->wrapped != NULL) {
     grpc_call_destroy(call->wrapped);
   }
+  zend_object_std_dtor(&call->std);
   return;
 }
 
@@ -92,7 +92,7 @@ void grpc_php_wrap_call(grpc_call *wrapped, bool owned, zval *call_object) {
   object_init_ex(call_object, grpc_ce_call);
   wrapped_grpc_call *call = Z_WRAPPED_GRPC_CALL_P(call_object);
   call->wrapped = wrapped;
-  call->owned = owned; //TODO(thinkerou): need?
+  call->owned = owned;
   return;
 }
 
