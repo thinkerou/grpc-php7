@@ -111,6 +111,7 @@ PHP_METHOD(ChannelCredentials, createDefault) {
  */
 PHP_METHOD(ChannelCredentials, createSsl) {
   char *pem_root_certs = NULL;
+
   grpc_ssl_pem_key_cert_pair pem_key_cert_pair;
 
   int root_certs_length = 0;
@@ -119,12 +120,11 @@ PHP_METHOD(ChannelCredentials, createSsl) {
 
   pem_key_cert_pair.private_key = pem_key_cert_pair.cert_chain = NULL;
 
+  //TODO(thinkerou): s! => S!, how do?
   /* "|s!s!s! == 3 optional nullable strings */
-  if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s!s!s!",
-                            &pem_root_certs, &root_certs_length,
-                            &pem_key_cert_pair.private_key,
-                            &private_key_length,
-                            &pem_key_cert_pair.cert_chain,
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s!s!s!", &pem_root_certs,
+                            &root_certs_length, &pem_key_cert_pair.private_key,
+                            &private_key_length, &pem_key_cert_pair.cert_chain,
                             &cert_chain_length) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "createSsl expects 3 optional strings", 1);

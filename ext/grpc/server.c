@@ -110,7 +110,7 @@ PHP_METHOD(Server, __construct) {
 #else
   ZEND_PARSE_PARAMETERS_START(0, 1)
     Z_PARAM_OPTIONAL
-    Z_PARAM_ZVAL(args_array)
+    Z_PARAM_ARRAY(args_array)
   ZEND_PARSE_PARAMETERS_END();
 #endif
   /*
@@ -123,16 +123,12 @@ PHP_METHOD(Server, __construct) {
   }
   */
     
-  if (Z_TYPE_P(args_array) == IS_ARRAY) {
+  if (args_array == NULL) {
+    server->wrapped = grpc_server_create(NULL, NULL);
+  } else {
     php_grpc_read_args_array(args_array, &args);
     server->wrapped = grpc_server_create(&args, NULL);
     efree(args.args);
-  } else if (Z_TYPE_P(args_array) == IS_NULL) {
-    server->wrapped = grpc_server_create(NULL, NULL);
-  } else {
-    zend_throw_exception(spl_ce_InvalidArgumentException,
-                        "Server expects param error", 1);
-    return;
   }
   
   grpc_server_register_completion_queue(server->wrapped,
@@ -198,37 +194,37 @@ cleanup:
  */
 PHP_METHOD(Server, addHttp2Port) {
   wrapped_grpc_server *server = Z_WRAPPED_GRPC_SERVER_P(getThis());
-  char *addr;
-  size_t addr_len;
+  //char *addr;
+  //size_t addr_len;
+  zend_string *addr;
 
-  /* "s" == 1 string */
+  /* "S" == 1 string */
 #ifndef FAST_ZPP
-  if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &addr, &addr_len) ==
-      FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &addr) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "add_http2_port expects a string", 1);
     return;
   }
 #else
   ZEND_PARSE_PARAMETERS_START(1, 1)
-    Z_PARAM_STRING(addr, addr_len)
+    Z_PARAM_STR(addr)
   ZEND_PARSE_PARAMETERS_END();
 #endif
 
-  RETURN_LONG(grpc_server_add_insecure_http2_port(server->wrapped, addr));
+  RETURN_LONG(grpc_server_add_insecure_http2_port(server->wrapped, ZSTR_VAL(addr)));
 }
 
 PHP_METHOD(Server, addSecureHttp2Port) {
   wrapped_grpc_server *server = Z_WRAPPED_GRPC_SERVER_P(getThis());
-  char *addr;
-  size_t addr_len;
+  //char *addr;
+  //size_t addr_len;
+  zend_string *addr;
   zval *creds_obj;
 
-  /* "sO" == 1 string, 1 object */
+  /* "SO" == 1 string, 1 object */
 #ifndef FAST_ZPP
-  if (zend_parse_parameters(ZEND_NUM_ARGS(), "sO", &addr, &addr_len,
-                            &creds_obj, grpc_ce_server_credentials) ==
-      FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "SO", &addr, &creds_obj,
+                            grpc_ce_server_credentials) == FAILURE) {
     zend_throw_exception(
         spl_ce_InvalidArgumentException,
         "add_http2_port expects a string and a ServerCredentials", 1);
@@ -236,14 +232,14 @@ PHP_METHOD(Server, addSecureHttp2Port) {
   }
 #else
   ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_STRING(addr, addr_len)
+    Z_PARAM_STR(addr)
     Z_PARAM_OBJECT_OF_CLASS(creds_obj, grpc_ce_server_credentials)
   ZEND_PARSE_PARAMETERS_END();
 #endif
 
   wrapped_grpc_server_credentials *creds =
     Z_WRAPPED_GRPC_SERVER_CREDS_P(creds_obj);
-  RETURN_LONG(grpc_server_add_secure_http2_port(server->wrapped, addr,
+  RETURN_LONG(grpc_server_add_secure_http2_port(server->wrapped, ZSTR_VAL(addr),
                                                 creds->wrapped));
 }
 

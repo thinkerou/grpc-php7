@@ -55,10 +55,11 @@ class ServerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testInvalidConstructor()
     {
+        $this->setErrorHandler();
         $server = new Grpc\Server('invalid_host');
     }
 

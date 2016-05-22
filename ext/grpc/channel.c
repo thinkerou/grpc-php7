@@ -95,17 +95,17 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
   array_hash = HASH_OF(args_array);
   if (!array_hash) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
-                            "array_hash is NULL", 1);
+                         "array_hash is NULL", 1);
     return;
   }
   args->num_args = zend_hash_num_elements(array_hash);
   args->args = ecalloc(args->num_args, sizeof(grpc_arg));
   args_index = 0;
-  ZEND_HASH_FOREACH_VAL(array_hash, data) {
-  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
+  //ZEND_HASH_FOREACH_VAL(array_hash, data) {
+  for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (data = zend_hash_get_current_data_ex(array_hash,
                                              &array_pointer)) != NULL;
-       zend_hash_move_forward_ex(array_hash, &array_pointer)) {*/
+       zend_hash_move_forward_ex(array_hash, &array_pointer)) {
     if (zend_hash_get_current_key_ex(array_hash, &key, &index,
                                      &array_pointer) != HASH_KEY_IS_STRING) {
       zend_throw_exception(spl_ce_InvalidArgumentException,
@@ -129,7 +129,7 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
     }
     args_index++;
   }
-  ZEND_HASH_FOREACH_END();
+  //ZEND_HASH_FOREACH_END();
   return;
 }
 
@@ -142,25 +142,26 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
  */
 PHP_METHOD(Channel, __construct) {
   wrapped_grpc_channel *channel = Z_WRAPPED_GRPC_CHANNEL_P(getThis());
-  char *target;
-  size_t target_length;
+  //char *target;
+  //size_t target_length;
+  zend_string *target;
   zval *args_array = NULL;
   grpc_channel_args args;
   HashTable *array_hash;
   zval *creds_obj = NULL;
   wrapped_grpc_channel_credentials *creds = NULL;
 
-  /* "sa" == 1 string, 1 array */
+  /* "Sa" == 1 string, 1 array */
 #ifndef FAST_ZPP
-  if (zend_parse_parameters(ZEND_NUM_ARGS(), "sa", &target,
-                            &target_length, &args_array) == FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "Sa", &target, &args_array)
+      == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "Channel expects a string and an array", 1);
     return;
   }
 #else
   ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_STRING(target, target_length)
+    Z_PARAM_STR(target)
     Z_PARAM_ARRAY(args_array)
   ZEND_PARSE_PARAMETERS_END();
 #endif
@@ -171,8 +172,7 @@ PHP_METHOD(Channel, __construct) {
     if (Z_TYPE_P(creds_obj) == IS_NULL) {
       creds = NULL;
       zend_hash_str_del(array_hash, "credentials", sizeof("credentials") - 1);
-    } else if (Z_OBJ_P(creds_obj)->ce !=
-        grpc_ce_channel_credentials) {
+    } else if (Z_OBJ_P(creds_obj)->ce != grpc_ce_channel_credentials) {
       zend_throw_exception(spl_ce_InvalidArgumentException,
                            "credentials must be a ChannelCredentials object",
                            1);
@@ -184,11 +184,13 @@ PHP_METHOD(Channel, __construct) {
   }
   php_grpc_read_args_array(args_array, &args);
   if (creds == NULL) {
-    channel->wrapped = grpc_insecure_channel_create(target, &args, NULL);
+    channel->wrapped = grpc_insecure_channel_create(ZSTR_VAL(target),
+                                                    &args, NULL);
   } else {
     gpr_log(GPR_DEBUG, "Initialized secure channel");
     channel->wrapped =
-        grpc_secure_channel_create(creds->wrapped, target, &args, NULL);
+        grpc_secure_channel_create(creds->wrapped, ZSTR_VAL(target),
+                                   &args, NULL);
   }
   efree(args.args);
 }
