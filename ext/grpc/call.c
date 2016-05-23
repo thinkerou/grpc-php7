@@ -319,6 +319,7 @@ PHP_METHOD(Call, startBatch) {
 #endif
 
   array_hash = HASH_OF(array);
+  //TODO(thinkerou): why phpunit wrong when use ZEND_HASH_FOREACH_VAL marco?
   //ZEND_HASH_FOREACH_VAL(array_hash, value) {
   for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (value = zend_hash_get_current_data_ex(array_hash,
