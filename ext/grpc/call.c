@@ -155,13 +155,16 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
   grpc_metadata_array_init(metadata);
   array_hash = HASH_OF(array);
 
-  //ZEND_HASH_FOREACH_VAL(array_hash, inner_array) {
-  for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
+  ZEND_HASH_FOREACH_STR_KEY_VAL(array_hash, key, inner_array) {
+  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (inner_array = zend_hash_get_current_data_ex(array_hash,
                                                     &array_pointer)) != NULL;
        zend_hash_move_forward_ex(array_hash, &array_pointer)) {
     if (zend_hash_get_current_key_ex(array_hash, &key, &index,
                                      &array_pointer) != HASH_KEY_IS_STRING) {
+      return false;
+    }*/
+    if (key == NULL) {
       return false;
     }
     if (Z_TYPE_P(inner_array) != IS_ARRAY) {
@@ -170,11 +173,11 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
     inner_array_hash = HASH_OF(inner_array);
     metadata->capacity += zend_hash_num_elements(inner_array_hash);
   }
-  //ZEND_HASH_FOREACH_END();
+  ZEND_HASH_FOREACH_END();
 
   metadata->metadata = gpr_malloc(metadata->capacity * sizeof(grpc_metadata));
  
-  //ZEND_HASH_FOREACH_VAL(array_hash, inner_array) {
+  //ZEND_HASH_FOREACH_STR_KEY_VAL(array_hash, key, inner_array) {
   for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (inner_array = zend_hash_get_current_data_ex(array_hash,
                                                     &array_pointer)) != NULL;
