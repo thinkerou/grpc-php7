@@ -87,11 +87,11 @@ zend_object *create_wrapped_grpc_channel(zend_class_entry *class_type) {
 
 void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
   HashTable *array_hash;
-  HashPosition array_pointer;
+  //HashPosition array_pointer;
   int args_index;
   zval *data;
   zend_string *key;
-  zend_ulong index;
+  //zend_ulong index;
   array_hash = HASH_OF(args_array);
   if (!array_hash) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
@@ -101,8 +101,8 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
   args->num_args = zend_hash_num_elements(array_hash);
   args->args = ecalloc(args->num_args, sizeof(grpc_arg));
   args_index = 0;
-  //ZEND_HASH_FOREACH_VAL(array_hash, data) {
-  for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
+  ZEND_HASH_FOREACH_STR_KEY_VAL(array_hash, key, data) {
+  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (data = zend_hash_get_current_data_ex(array_hash,
                                              &array_pointer)) != NULL;
        zend_hash_move_forward_ex(array_hash, &array_pointer)) {
@@ -111,6 +111,10 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
       zend_throw_exception(spl_ce_InvalidArgumentException,
                            "args keys must be strings", 1);
       return;
+    }*/
+    if (key == NULL) {
+      zend_throw_exception(spl_ce_InvalidArgumentException,
+                           "args keys must be strings", 1);
     }
     args->args[args_index].key = ZSTR_VAL(key);
     switch (Z_TYPE_P(data)) {
@@ -129,7 +133,7 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
     }
     args_index++;
   }
-  //ZEND_HASH_FOREACH_END();
+  ZEND_HASH_FOREACH_END();
   return;
 }
 
