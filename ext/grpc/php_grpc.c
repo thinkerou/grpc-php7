@@ -65,11 +65,11 @@ const zend_function_entry grpc_functions[] = {
 zend_module_entry grpc_module_entry = {
     STANDARD_MODULE_HEADER,
     "grpc",
-	grpc_functions,
-	PHP_MINIT(grpc),
+    grpc_functions,
+    PHP_MINIT(grpc),
     PHP_MSHUTDOWN(grpc),
-	NULL,
-	NULL,
+    NULL,
+    NULL,
     PHP_MINFO(grpc),
     PHP_GRPC_VERSION,
     STANDARD_MODULE_PROPERTIES

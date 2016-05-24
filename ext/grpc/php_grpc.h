@@ -77,7 +77,7 @@ PHP_MINFO_FUNCTION(grpc);
 
 ZEND_BEGIN_MODULE_GLOBALS(grpc)
   zend_long global_value;
-  char global_string;
+  char *global_string;
 ZEND_END_MODULE_GLOBALS(grpc)
 */
 
