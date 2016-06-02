@@ -194,8 +194,6 @@ cleanup:
  */
 PHP_METHOD(Server, addHttp2Port) {
   wrapped_grpc_server *server = Z_WRAPPED_GRPC_SERVER_P(getThis());
-  //char *addr;
-  //size_t addr_len;
   zend_string *addr;
 
   /* "S" == 1 string */
@@ -216,8 +214,6 @@ PHP_METHOD(Server, addHttp2Port) {
 
 PHP_METHOD(Server, addSecureHttp2Port) {
   wrapped_grpc_server *server = Z_WRAPPED_GRPC_SERVER_P(getThis());
-  //char *addr;
-  //size_t addr_len;
   zend_string *addr;
   zval *creds_obj;
 

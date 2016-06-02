@@ -146,8 +146,6 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
  */
 PHP_METHOD(Channel, __construct) {
   wrapped_grpc_channel *channel = Z_WRAPPED_GRPC_CHANNEL_P(getThis());
-  //char *target;
-  //size_t target_length;
   zend_string *target;
   zval *args_array = NULL;
   grpc_channel_args args;

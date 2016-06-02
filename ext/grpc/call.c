@@ -204,10 +204,8 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
       metadata->metadata[metadata->count].value = Z_STRVAL_P(value);
       metadata->metadata[metadata->count].value_length = Z_STRLEN_P(value);
       metadata->count += 1;
-    }
-    ZEND_HASH_FOREACH_END();
-  }
-  ZEND_HASH_FOREACH_END();
+    } ZEND_HASH_FOREACH_END();
+  } ZEND_HASH_FOREACH_END();
   return true;
 }
 
@@ -221,12 +219,8 @@ bool create_metadata_array(zval *array, grpc_metadata_array *metadata) {
 PHP_METHOD(Call, __construct) {
   wrapped_grpc_call *call = Z_WRAPPED_GRPC_CALL_P(getThis());
   zval *channel_obj;
-  //char *method;
-  //size_t method_len;
   zend_string *method;
   zval *deadline_obj;
-  //char *host_override = NULL;
-  //size_t host_override_len = 0;
   zend_string *host_override;
 
   /* "OSO|S" == 1 Object, 1 string, 1 Object, 1 optional string */
