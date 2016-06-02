@@ -97,30 +97,27 @@ void grpc_php_wrap_server_credentials(grpc_server_credentials *wrapped,
  * @return Credentials The new SSL credentials object
  */
 PHP_METHOD(ServerCredentials, createSsl) {
-  char *pem_root_certs = 0;
-  size_t root_certs_length = 0;
+  //char *pem_root_certs = 0;
+  //size_t root_certs_length = 0;
   //TODO(thinkerou): s! => S!, why crash?
-  //zend_string *pem_root_certs;
+  zend_string *pem_root_certs = NULL;
   zend_string *private_key;
   zend_string *cert_chain;
  
   grpc_ssl_pem_key_cert_pair pem_key_cert_pair;
-  //size_t private_key_length;
-  //size_t cert_chain_length;
 
-  /* "s!SS" == 1 nullable string, 2 strings */
+  /* "S!SS" == 1 nullable string, 2 strings */
 #ifndef FAST_ZPP
   /* TODO: support multiple key cert pairs. */
-  if (zend_parse_parameters(ZEND_NUM_ARGS(), "s!SS", &pem_root_certs,
-                            &root_certs_length, &private_key, &cert_chain)
-      == FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "S!SS", &pem_root_certs,
+                            &private_key, &cert_chain) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "createSsl expects 3 strings", 1);
     return;
   }
 #else
   ZEND_PARSE_PARAMETERS_START(3, 3)
-    Z_PARAM_STRING(pem_root_certs, root_certs_length)
+    Z_PARAM_STR_EX(pem_root_certs, 1, 0)
     Z_PARAM_STR(private_key)
     Z_PARAM_STR(cert_chain)
   ZEND_PARSE_PARAMETERS_END();
@@ -131,7 +128,7 @@ PHP_METHOD(ServerCredentials, createSsl) {
   /* TODO: add a client_certificate_request field in ServerCredentials and pass
    * it as the last parameter. */
   grpc_server_credentials *creds = grpc_ssl_server_credentials_create_ex(
-      pem_root_certs, &pem_key_cert_pair, 1,
+      ZSTR_VAL(pem_root_certs), &pem_key_cert_pair, 1,
       GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, NULL);
   grpc_php_wrap_server_credentials(creds, return_value);
   RETURN_DESTROY_ZVAL(return_value);

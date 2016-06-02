@@ -110,29 +110,38 @@ PHP_METHOD(ChannelCredentials, createDefault) {
  * @return ChannelCredentials The new SSL credentials object
  */
 PHP_METHOD(ChannelCredentials, createSsl) {
-  char *pem_root_certs = NULL;
+  zend_string *pem_root_certs = NULL;
+  zend_string *private_key = NULL;
+  zend_string *cert_chain = NULL;
 
   grpc_ssl_pem_key_cert_pair pem_key_cert_pair;
-
-  int root_certs_length = 0;
-  int private_key_length = 0;
-  int cert_chain_length = 0;
-
   pem_key_cert_pair.private_key = pem_key_cert_pair.cert_chain = NULL;
 
-  //TODO(thinkerou): s! => S!, how do?
-  /* "|s!s!s! == 3 optional nullable strings */
-  if (zend_parse_parameters(ZEND_NUM_ARGS(), "|s!s!s!", &pem_root_certs,
-                            &root_certs_length, &pem_key_cert_pair.private_key,
-                            &private_key_length, &pem_key_cert_pair.cert_chain,
-                            &cert_chain_length) == FAILURE) {
+  //TODO(thinkerou): add unittest 
+  /* "|S!S!S! == 3 optional nullable strings */
+#ifndef FAST_ZPP
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "|S!S!S!", &pem_root_certs,
+                            &private_key, &cert_chain) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "createSsl expects 3 optional strings", 1);
     return;
   }
+#else
+  ZEND_PARSE_PARAMETERS_START(0, 3)
+    Z_PARAM_OPTIONAL
+    Z_PARAM_STR_EX(pem_root_certs, 1, 0)
+    Z_PARAM_STR_EX(private_key, 1, 0)
+    Z_PARAM_STR_EX(cert_chain, 1, 0)
+  ZEND_PARSE_PARAMETERS_END();
+#endif
+
+  // private_key == NULL?
+  // cert_chain == NULL?
+  pem_key_cert_pair.private_key = ZSTR_VAL(private_key);
+  pem_key_cert_pair.cert_chain = ZSTR_VAL(cert_chain);
 
   grpc_channel_credentials *creds = grpc_ssl_credentials_create(
-      pem_root_certs,
+      ZSTR_VAL(pem_root_certs),
       pem_key_cert_pair.private_key == NULL ? NULL : &pem_key_cert_pair, NULL);
   grpc_php_wrap_channel_credentials(creds, return_value);
   RETURN_DESTROY_ZVAL(return_value);
@@ -148,7 +157,7 @@ PHP_METHOD(ChannelCredentials, createComposite) {
   zval *cred1_obj;
   zval *cred2_obj;
 
-  /* "OO" == 3 Objects */
+  /* "OO" == 2 Objects */
 #ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "OO", &cred1_obj,
                             grpc_ce_channel_credentials, &cred2_obj,
