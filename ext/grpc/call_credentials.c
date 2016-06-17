@@ -130,27 +130,27 @@ PHP_METHOD(CallCredentials, createComposite) {
  * @return CallCredentials The new call credentials object
  */
 PHP_METHOD(CallCredentials, createFromPlugin) {
-  zend_fcall_info fci;
-  zend_fcall_info_cache fci_cache;
+  zend_fcall_info *fci;
+  zend_fcall_info_cache *fci_cache;
 
-  //fci = (zend_fcall_info *)emalloc(sizeof(zend_fcall_info));
-  //fci_cache = (zend_fcall_info_cache *)emalloc(sizeof(zend_fcall_info_cache));
-  //memset(fci, 0, sizeof(zend_fcall_info));
-  //memset(fci_cache, 0, sizeof(zend_fcall_info_cache));
+  fci = (zend_fcall_info *)emalloc(sizeof(zend_fcall_info));
+  fci_cache = (zend_fcall_info_cache *)emalloc(sizeof(zend_fcall_info_cache));
+  memset(fci, 0, sizeof(zend_fcall_info));
+  memset(fci_cache, 0, sizeof(zend_fcall_info_cache));
 
   /* "f" == 1 function */
-#ifndef FAST_ZPP  
-  if (zend_parse_parameters(ZEND_NUM_ARGS(), "f*", &fci,
-                            &fci_cache, &fci.params,
-                            &fci.param_count) == FAILURE) {
+#ifndef FAST_ZPP 
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "f", fci,
+                            fci_cache, fci->params,
+                            fci->param_count) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "createFromPlugin expects 1 callback", 1);
     return;
   }
 #else
   ZEND_PARSE_PARAMETERS_START(1, -1)
-    Z_PARAM_FUNC(fci, fci_cache)
-    Z_PARAM_VARIADIC("*", fci.params, fci.param_count)
+    Z_PARAM_FUNC(*fci, *fci_cache)
+    Z_PARAM_VARIADIC("*", fci->params, fci->param_count)
   ZEND_PARSE_PARAMETERS_END();
 #endif
 
@@ -159,8 +159,8 @@ PHP_METHOD(CallCredentials, createFromPlugin) {
   memset(state, 0, sizeof(plugin_state));
 
   /* save the user provided PHP callback function */
-  state->fci = &fci;
-  state->fci_cache = &fci_cache;
+  state->fci = fci;
+  state->fci_cache = fci_cache;
 
   grpc_metadata_credentials_plugin plugin;
   plugin.get_metadata = plugin_get_metadata;
