@@ -58,11 +58,10 @@ static zend_object_handlers channel_creds_object_handlers_channel_creds;
 static void free_wrapped_grpc_channel_credentials(zend_object *object) {
   wrapped_grpc_channel_credentials *creds =
     wrapped_grpc_channel_creds_from_obj(object);
-  zend_object_std_dtor(&creds->std);
   if (creds->wrapped != NULL) {
     grpc_channel_credentials_release(creds->wrapped);
   }
-  return;
+  zend_object_std_dtor(&creds->std);
 }
 
 /* Initializes an instance of wrapped_grpc_channel_credentials to be
@@ -87,7 +86,6 @@ void grpc_php_wrap_channel_credentials(grpc_channel_credentials *wrapped,
   wrapped_grpc_channel_credentials *credentials =
     Z_WRAPPED_GRPC_CHANNEL_CREDS_P(credentials_object);
   credentials->wrapped = wrapped;
-  return;
 }
 
 /**
@@ -140,6 +138,7 @@ PHP_METHOD(ChannelCredentials, createSsl) {
   pem_key_cert_pair.private_key = ZSTR_VAL(private_key);
   pem_key_cert_pair.cert_chain = ZSTR_VAL(cert_chain);
 
+  //TODO(thinkerou): deal unittest crash!!!
   grpc_channel_credentials *creds = grpc_ssl_credentials_create(
       ZSTR_VAL(pem_root_certs),
       pem_key_cert_pair.private_key == NULL ? NULL : &pem_key_cert_pair, NULL);
@@ -217,5 +216,4 @@ void grpc_init_channel_credentials() {
     XtOffsetOf(wrapped_grpc_channel_credentials, std);
   channel_creds_object_handlers_channel_creds.free_obj =
     free_wrapped_grpc_channel_credentials;
-  return;
 }

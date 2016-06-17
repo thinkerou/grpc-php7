@@ -68,7 +68,6 @@ static void free_wrapped_grpc_call(zend_object *object) {
     grpc_call_destroy(call->wrapped);
   }
   zend_object_std_dtor(&call->std);
-  return;
 }
 
 /* Initializes an instance of wrapped_grpc_call to be associated with an object
@@ -93,7 +92,6 @@ void grpc_php_wrap_call(grpc_call *wrapped, bool owned, zval *call_object) {
   wrapped_grpc_call *call = Z_WRAPPED_GRPC_CALL_P(call_object);
   call->wrapped = wrapped;
   call->owned = owned;
-  return;
 }
 
 /* Creates and returns a PHP array object with the data in a
@@ -135,7 +133,6 @@ void grpc_parse_metadata_array(grpc_metadata_array *metadata_array, zval *array)
       add_assoc_zval(array, str_key, &inner_array);
     }
   }
-  return;
 }
 
 /* Populates a grpc_metadata_array with the data in a PHP array object.
@@ -576,5 +573,4 @@ void grpc_init_call() {
          sizeof(zend_object_handlers));
   call_object_handlers_call.offset = XtOffsetOf(wrapped_grpc_call, std);
   call_object_handlers_call.free_obj = free_wrapped_grpc_call;
-  return;
 }

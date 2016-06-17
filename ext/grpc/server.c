@@ -72,7 +72,6 @@ static void free_wrapped_grpc_server(zend_object *object) {
     grpc_server_destroy(server->wrapped);
   }
   zend_object_std_dtor(&server->std);
-  return;
 }
 
 /* Initializes an instance of wrapped_grpc_call to be associated with an object
@@ -266,5 +265,4 @@ void grpc_init_server() {
          sizeof(zend_object_handlers));
   server_object_handlers_server.offset = XtOffsetOf(wrapped_grpc_server, std);
   server_object_handlers_server.free_obj = free_wrapped_grpc_server;
-  return;
 }

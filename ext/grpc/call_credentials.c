@@ -59,11 +59,10 @@ static zend_object_handlers call_creds_object_handlers_call_creds;
 static void free_wrapped_grpc_call_credentials(zend_object *object) {
   wrapped_grpc_call_credentials *creds =
     wrapped_grpc_call_creds_from_obj(object);
-  zend_object_std_dtor(&creds->std);
   if (creds->wrapped != NULL) {
     grpc_call_credentials_release(creds->wrapped);
   }
-  return;
+  zend_object_std_dtor(&creds->std);
 }
 
 /* Initializes an instance of wrapped_grpc_call_credentials to be
@@ -88,7 +87,6 @@ void grpc_php_wrap_call_credentials(grpc_call_credentials *wrapped,
   wrapped_grpc_call_credentials *credentials =
     Z_WRAPPED_GRPC_CALL_CREDS_P(credentials_object);
   credentials->wrapped = wrapped;
-  return;
 }
 
 /**
@@ -132,31 +130,37 @@ PHP_METHOD(CallCredentials, createComposite) {
  * @return CallCredentials The new call credentials object
  */
 PHP_METHOD(CallCredentials, createFromPlugin) {
-  zend_fcall_info *fci;
-  zend_fcall_info_cache *fci_cache;
+  zend_fcall_info fci;
+  zend_fcall_info_cache fci_cache;
 
-  fci = (zend_fcall_info *)emalloc(sizeof(zend_fcall_info));
-  fci_cache = (zend_fcall_info_cache *)emalloc(sizeof(zend_fcall_info_cache));
-  memset(fci, 0, sizeof(zend_fcall_info));
-  memset(fci_cache, 0, sizeof(zend_fcall_info_cache));
+  //fci = (zend_fcall_info *)emalloc(sizeof(zend_fcall_info));
+  //fci_cache = (zend_fcall_info_cache *)emalloc(sizeof(zend_fcall_info_cache));
+  //memset(fci, 0, sizeof(zend_fcall_info));
+  //memset(fci_cache, 0, sizeof(zend_fcall_info_cache));
 
   /* "f" == 1 function */
-  //TODO(tianou): f, use FAST_ZPP, how do?
-  if (zend_parse_parameters(ZEND_NUM_ARGS(), "f", fci,
-                            fci_cache, fci->params,
-                            fci->param_count) == FAILURE) {
+#ifndef FAST_ZPP  
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "f*", &fci,
+                            &fci_cache, &fci.params,
+                            &fci.param_count) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "createFromPlugin expects 1 callback", 1);
     return;
   }
+#else
+  ZEND_PARSE_PARAMETERS_START(1, -1)
+    Z_PARAM_FUNC(fci, fci_cache)
+    Z_PARAM_VARIADIC("*", fci.params, fci.param_count)
+  ZEND_PARSE_PARAMETERS_END();
+#endif
 
   plugin_state *state;
   state = (plugin_state *)emalloc(sizeof(plugin_state));
   memset(state, 0, sizeof(plugin_state));
 
   /* save the user provided PHP callback function */
-  state->fci = fci;
-  state->fci_cache = fci_cache;
+  state->fci = &fci;
+  state->fci_cache = &fci_cache;
 
   grpc_metadata_credentials_plugin plugin;
   plugin.get_metadata = plugin_get_metadata;
@@ -209,7 +213,6 @@ void plugin_get_metadata(void *ptr, grpc_auth_metadata_context context,
 
   /* Pass control back to core */
   cb(user_data, metadata.metadata, metadata.count, code, NULL);
-  return;
 }
 
 /* Cleanup function for plugin creds API */
@@ -218,7 +221,6 @@ void plugin_destroy_state(void *ptr) {
   efree(state->fci);
   efree(state->fci_cache);
   efree(state);
-  return;
 }
 
 static zend_function_entry call_credentials_methods[] = {
@@ -241,5 +243,4 @@ void grpc_init_call_credentials() {
     XtOffsetOf(wrapped_grpc_call_credentials, std);
   call_creds_object_handlers_call_creds.free_obj =
     free_wrapped_grpc_call_credentials;
-  return;
 }

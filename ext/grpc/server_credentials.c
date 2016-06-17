@@ -61,7 +61,6 @@ static void free_wrapped_grpc_server_credentials(zend_object *object) {
     grpc_server_credentials_release(creds->wrapped);
   }
   zend_object_std_dtor(&creds->std);
-  return;
 }
 
 /* Initializes an instace of wrapped_grpc_server_credentials to be associated
@@ -86,7 +85,6 @@ void grpc_php_wrap_server_credentials(grpc_server_credentials *wrapped,
   wrapped_grpc_server_credentials *server_credentials =
     Z_WRAPPED_GRPC_SERVER_CREDS_P(server_credentials_object);
   server_credentials->wrapped = wrapped;
-  return;
 }
 
 /**
@@ -97,9 +95,6 @@ void grpc_php_wrap_server_credentials(grpc_server_credentials *wrapped,
  * @return Credentials The new SSL credentials object
  */
 PHP_METHOD(ServerCredentials, createSsl) {
-  //char *pem_root_certs = 0;
-  //size_t root_certs_length = 0;
-  //TODO(thinkerou): s! => S!, why crash?
   zend_string *pem_root_certs = NULL;
   zend_string *private_key;
   zend_string *cert_chain;
@@ -152,5 +147,4 @@ void grpc_init_server_credentials() {
     XtOffsetOf(wrapped_grpc_server_credentials, std);
   server_creds_object_handlers_server_creds.free_obj =
     free_wrapped_grpc_server_credentials;
-  return;
 }

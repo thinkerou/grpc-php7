@@ -63,11 +63,10 @@ static zend_object_handlers channel_object_handlers_channel;
 /* Frees and destroys an instance of wrapped_grpc_channel */
 static void free_wrapped_grpc_channel(zend_object *object) {
   wrapped_grpc_channel *channel = wrapped_grpc_channel_from_obj(object);
-  zend_object_std_dtor(&channel->std);
   if (channel->wrapped != NULL) {
     grpc_channel_destroy(channel->wrapped);
   }
-  return;
+  zend_object_std_dtor(&channel->std);
 }
 
 /* Initializes an instance of wrapped_grpc_channel to be associated with an
@@ -132,9 +131,7 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
         return;
     }
     args_index++;
-  }
-  ZEND_HASH_FOREACH_END();
-  return;
+  } ZEND_HASH_FOREACH_END();
 }
 
 /**
@@ -301,5 +298,4 @@ void grpc_init_channel() {
   channel_object_handlers_channel.offset =
     XtOffsetOf(wrapped_grpc_channel, std);
   channel_object_handlers_channel.free_obj = free_wrapped_grpc_channel;
-  return;
 }
