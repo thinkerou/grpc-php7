@@ -95,7 +95,7 @@ zend_object *create_wrapped_grpc_server(zend_class_entry *class_type) {
  */
 PHP_METHOD(Server, __construct) {
   wrapped_grpc_server *server = Z_WRAPPED_GRPC_SERVER_P(getThis());
-  zval *args_array;
+  zval *args_array = NULL;
   grpc_channel_args args;
 
   /* "|a" == 1 optional array */

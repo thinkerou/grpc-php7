@@ -230,9 +230,6 @@ PHP_MINIT_FUNCTION(grpc) {
   REGISTER_LONG_CONSTANT("Grpc\\CHANNEL_TRANSIENT_FAILURE",
                          GRPC_CHANNEL_TRANSIENT_FAILURE,
                          CONST_CS | CONST_PERSISTENT);
-  REGISTER_LONG_CONSTANT("Grpc\\CHANNEL_FATAL_FAILURE",
-                         GRPC_CHANNEL_FATAL_FAILURE,
-                         CONST_CS | CONST_PERSISTENT);
 
   grpc_init_call();
   grpc_init_channel();
