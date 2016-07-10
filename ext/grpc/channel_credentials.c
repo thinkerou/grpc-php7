@@ -47,12 +47,24 @@
 #include <zend_exceptions.h>
 #include <zend_hash.h>
 
+#include <grpc/support/alloc.h>
 #include <grpc/grpc.h>
 #include <grpc/grpc_security.h>
 
 zend_class_entry *grpc_ce_channel_credentials;
 
 static zend_object_handlers channel_creds_object_handlers_channel_creds;
+
+static char* default_pem_root_certs = NULL;
+
+static grpc_ssl_roots_override_result get_ssl_roots_override(
+    char **pem_root_certs) {
+  *pem_root_certs = default_pem_root_certs;
+  if (default_pem_root_certs == NULL) {
+    return GRPC_SSL_ROOTS_OVERRIDE_FAIL;
+  }
+  return GRPC_SSL_ROOTS_OVERRIDE_OK;
+}
 
 /* Frees and destroys an instance of wrapped_grpc_channel_credentials */
 static void free_wrapped_grpc_channel_credentials(zend_object *object) {
@@ -86,6 +98,32 @@ void grpc_php_wrap_channel_credentials(grpc_channel_credentials *wrapped,
   wrapped_grpc_channel_credentials *credentials =
     Z_WRAPPED_GRPC_CHANNEL_CREDS_P(credentials_object);
   credentials->wrapped = wrapped;
+}
+
+ /**
+  * Set default roots pem.
+  * @param string pem_roots PEM encoding of the server root certificates
+  * @return void
+  */
+PHP_METHOD(ChannelCredentials, setDefaultRootsPem) {
+  char *pem_roots;
+  size_t pem_roots_length;
+
+#ifndef FAST_ZPP
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &pem_roots,
+                           &pem_roots_length)  == FAILURE) {
+    zend_throw_exception(spl_ce_InvalidArgumentException,
+                         "setDefaultRootsPem expects 1 string", 1 TSRMLS_CC);
+    return;
+  }
+#else
+  ZEND_PARSE_PARAMETERS_START(1, 1)
+    Z_PARAM_STRING(pem_roots, pem_roots_length)
+  ZEND_PARSE_PARAMETERS_END();
+#endif
+
+  default_pem_root_certs = gpr_malloc((pem_roots_length + 1) * sizeof(char));
+  memcpy(default_pem_root_certs, pem_roots, pem_roots_length + 1);
 }
 
 /**
@@ -192,6 +230,8 @@ PHP_METHOD(ChannelCredentials, createInsecure) {
 }
 
 static zend_function_entry channel_credentials_methods[] = {
+  PHP_ME(ChannelCredentials, setDefaultRootsPem, NULL,
+         ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
   PHP_ME(ChannelCredentials, createDefault, NULL,
          ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
   PHP_ME(ChannelCredentials, createSsl, NULL,
@@ -207,6 +247,7 @@ void grpc_init_channel_credentials() {
   zend_class_entry ce;
   INIT_CLASS_ENTRY(ce, "Grpc\\ChannelCredentials",
                    channel_credentials_methods);
+  grpc_set_ssl_roots_override_callback(get_ssl_roots_override);
   ce.create_object = create_wrapped_grpc_channel_credentials;
   grpc_ce_channel_credentials = zend_register_internal_class(&ce);
   memcpy(&channel_creds_object_handlers_channel_creds,

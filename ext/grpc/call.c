@@ -253,6 +253,7 @@ PHP_METHOD(Call, __construct) {
   call->wrapped = grpc_channel_create_call(
       channel->wrapped, NULL, GRPC_PROPAGATE_DEFAULTS, completion_queue,
       ZSTR_VAL(method), ZSTR_VAL(host_override), deadline->wrapped, NULL);
+  call->owned = true;
 }
 
 /**

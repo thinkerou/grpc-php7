@@ -231,7 +231,7 @@ PHP_MINIT_FUNCTION(grpc) {
                          GRPC_CHANNEL_TRANSIENT_FAILURE,
                          CONST_CS | CONST_PERSISTENT);
   REGISTER_LONG_CONSTANT("Grpc\\CHANNEL_FATAL_FAILURE",
-                         GRPC_CHANNEL_FATAL_FAILURE,
+                         GRPC_CHANNEL_SHUTDOWN,
                          CONST_CS | CONST_PERSISTENT);
 
   grpc_init_call();
@@ -252,6 +252,8 @@ PHP_MSHUTDOWN_FUNCTION(grpc) {
   /* uncomment this line if you have INI entries
   UNREGISTER_INI_ENTRIES();
   */
+  // WARNING: This function IS being called by PHP when the extension
+  // is unloaded but the logs were somehow suppressed.
   grpc_shutdown_timeval();
   grpc_php_shutdown_completion_queue();
   grpc_shutdown();
