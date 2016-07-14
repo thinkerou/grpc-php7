@@ -171,14 +171,15 @@ PHP_METHOD(ChannelCredentials, createSsl) {
   ZEND_PARSE_PARAMETERS_END();
 #endif
 
-  // private_key == NULL?
-  // cert_chain == NULL?
-  pem_key_cert_pair.private_key = ZSTR_VAL(private_key);
-  pem_key_cert_pair.cert_chain = ZSTR_VAL(cert_chain);
+  if (private_key) {
+    pem_key_cert_pair.private_key = ZSTR_VAL(private_key);
+  }
+  if (cert_chain) {
+    pem_key_cert_pair.cert_chain = ZSTR_VAL(cert_chain);
+  }
 
-  //TODO(thinkerou): deal unittest crash!!!
   grpc_channel_credentials *creds = grpc_ssl_credentials_create(
-      ZSTR_VAL(pem_root_certs),
+      pem_root_certs == NULL ? NULL : ZSTR_VAL(pem_root_certs),
       pem_key_cert_pair.private_key == NULL ? NULL : &pem_key_cert_pair, NULL);
   grpc_php_wrap_channel_credentials(creds, return_value);
   RETURN_DESTROY_ZVAL(return_value);

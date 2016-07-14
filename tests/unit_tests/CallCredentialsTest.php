@@ -164,10 +164,11 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testCreateFromPluginInvalidParam()
     {
+        $this->setErrorHandler();
         $call_credentials = Grpc\CallCredentials::createFromPlugin(
             'callbackFunc'
         );

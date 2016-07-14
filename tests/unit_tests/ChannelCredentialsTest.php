@@ -61,10 +61,11 @@ class ChanellCredentialsTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
+     * @expectedException ErrorException
      */
     public function testInvalidCreateSsl()
     {
+        $this->setErrorHandler();
         $channel_credentials = Grpc\ChannelCredentials::createSsl([]);
     }
 
