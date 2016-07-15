@@ -269,7 +269,7 @@ PHP_METHOD(Call, startBatch) {
   zval *value;
   zval *inner_value;
   HashTable *array_hash;
-  HashPosition array_pointer;
+  //HashPosition array_pointer;
   HashTable *status_hash;
   HashTable *message_hash;
   zval *message_value;
@@ -311,9 +311,8 @@ PHP_METHOD(Call, startBatch) {
 #endif
 
   array_hash = HASH_OF(array);
-  //TODO(thinkerou): why phpunit wrong when use ZEND_HASH_FOREACH_VAL marco?
-  //ZEND_HASH_FOREACH_VAL(array_hash, value) {
-  for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
+  ZEND_HASH_FOREACH_KEY_VAL(array_hash, index, key, value) {
+  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
        (value = zend_hash_get_current_data_ex(array_hash,
                                               &array_pointer)) != NULL;
        zend_hash_move_forward_ex(array_hash, &array_pointer)) {
@@ -322,7 +321,13 @@ PHP_METHOD(Call, startBatch) {
       zend_throw_exception(spl_ce_InvalidArgumentException,
                            "batch keys must be integers", 1);
       goto cleanup;
+    }*/
+    if (key) {
+      zend_throw_exception(spl_ce_InvalidArgumentException,
+                              "batch keys must be integers", 1);
+      goto cleanup;
     }
+
     switch(index) {
       case GRPC_OP_SEND_INITIAL_METADATA:
         if (!create_metadata_array(value, &metadata)) {
@@ -432,7 +437,7 @@ PHP_METHOD(Call, startBatch) {
     ops[op_num].reserved = NULL;
     op_num++;
   }
-  //ZEND_HASH_FOREACH_END();
+  ZEND_HASH_FOREACH_END();
 
   error = grpc_call_start_batch(call->wrapped, ops, op_num,
                                 call->wrapped, NULL);
