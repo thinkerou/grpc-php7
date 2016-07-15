@@ -466,7 +466,10 @@ PHP_METHOD(Call, startBatch) {
       case GRPC_OP_RECV_INITIAL_METADATA:
         grpc_parse_metadata_array(&recv_metadata, array);
         add_property_zval(return_value, "metadata", array);
-        //Z_DELREF_P(array);
+        //TODO(thinkerou): why crash?
+        //if (array && Z_REFCOUNT_P(array) > 0) {
+        //  Z_DELREF_P(array);
+        //}
         break;
       case GRPC_OP_RECV_MESSAGE:
         byte_buffer_to_string(message, &message_str, &message_len);
@@ -480,11 +483,14 @@ PHP_METHOD(Call, startBatch) {
         object_init(&recv_status);
         grpc_parse_metadata_array(&recv_trailing_metadata, array);
         add_property_zval(&recv_status, "metadata", array);
-        //Z_DELREF_P(array);
+        //TODO(thinkerou): why crash?
+        //if (array && Z_REFCOUNT_P(array) > 0) {
+        //  Z_DELREF_P(array);
+        //}
         add_property_long(&recv_status, "code", status);
         add_property_string(&recv_status, "details", status_details);
         add_property_zval(return_value, "status", &recv_status);
-        //Z_DELREF_P(&recv_status);
+        if (Z_REFCOUNTED(recv_status)) Z_DELREF(recv_status);
         break;
       case GRPC_OP_RECV_CLOSE_ON_SERVER:
         add_property_bool(return_value, "cancelled", cancelled);
