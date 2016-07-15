@@ -296,7 +296,8 @@ PHP_METHOD(Call, startBatch) {
   grpc_metadata_array_init(&recv_metadata);
   grpc_metadata_array_init(&recv_trailing_metadata);
   object_init(return_value);
-  
+  memset(ops, 0, sizeof(ops));
+
   /* "a" == 1 array */
 #ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "a", &array) == FAILURE) {
