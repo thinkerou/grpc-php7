@@ -48,7 +48,6 @@
 #include <stdbool.h>
 
 #include <grpc/grpc.h>
-#include <grpc/support/log.h>
 #include <grpc/grpc_security.h>
 
 #include "completion_queue.h"
@@ -186,7 +185,6 @@ PHP_METHOD(Channel, __construct) {
     channel->wrapped = grpc_insecure_channel_create(ZSTR_VAL(target),
                                                     &args, NULL);
   } else {
-    gpr_log(GPR_DEBUG, "Initialized secure channel");
     channel->wrapped =
         grpc_secure_channel_create(creds->wrapped, ZSTR_VAL(target),
                                    &args, NULL);
