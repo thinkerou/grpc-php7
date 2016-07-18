@@ -56,14 +56,16 @@ typedef struct wrapped_grpc_call_credentials {
   zend_object std;
 } wrapped_grpc_call_credentials;
 
-static inline wrapped_grpc_call_credentials *wrapped_grpc_call_creds_from_obj(
-    zend_object *obj) {
-    return (wrapped_grpc_call_credentials*)(
-        (char*)(obj) - XtOffsetOf(wrapped_grpc_call_credentials, std));
+static inline wrapped_grpc_call_credentials
+*wrapped_grpc_call_creds_from_obj(zend_object *obj) {
+  return
+    (wrapped_grpc_call_credentials*)((char*)(obj) -
+                                     XtOffsetOf(wrapped_grpc_call_credentials,
+                                                std));
 }
 
-#define Z_WRAPPED_GRPC_CALL_CREDS_P(zv) \
-        wrapped_grpc_call_creds_from_obj(Z_OBJ_P((zv)))
+#define Z_WRAPPED_GRPC_CALL_CREDS_P(zv)           \
+  wrapped_grpc_call_creds_from_obj(Z_OBJ_P((zv)))
 
 /* Struct to hold callback function for plugin creds API */
 typedef struct plugin_state {

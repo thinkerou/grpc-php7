@@ -52,13 +52,11 @@
 #include <grpc/grpc_security.h>
 
 zend_class_entry *grpc_ce_channel_credentials;
-
-static zend_object_handlers channel_creds_object_handlers_channel_creds;
-
+static zend_object_handlers channel_credentials_ce_handlers;
 static char* default_pem_root_certs = NULL;
 
-static grpc_ssl_roots_override_result get_ssl_roots_override(
-    char **pem_root_certs) {
+static grpc_ssl_roots_override_result
+get_ssl_roots_override(char **pem_root_certs) {
   *pem_root_certs = default_pem_root_certs;
   if (default_pem_root_certs == NULL) {
     return GRPC_SSL_ROOTS_OVERRIDE_FAIL;
@@ -78,52 +76,43 @@ static void free_wrapped_grpc_channel_credentials(zend_object *object) {
 
 /* Initializes an instance of wrapped_grpc_channel_credentials to be
  * associated with an object of a class specified by class_type */
-zend_object *create_wrapped_grpc_channel_credentials(
-    zend_class_entry *class_type) {
+zend_object *create_wrapped_grpc_channel_credentials(zend_class_entry
+                                                     *class_type) {
   wrapped_grpc_channel_credentials *intern;
   intern = ecalloc(1, sizeof(wrapped_grpc_channel_credentials) +
                    zend_object_properties_size(class_type));
-
   zend_object_std_init(&intern->std, class_type);
   object_properties_init(&intern->std, class_type);
-  
-  intern->std.handlers = &channel_creds_object_handlers_channel_creds;
-  
+  intern->std.handlers = &channel_credentials_ce_handlers;
   return &intern->std;
 }
 
 void grpc_php_wrap_channel_credentials(grpc_channel_credentials *wrapped,
-                                      zval *credentials_object) {
+                                       zval *credentials_object) {
   object_init_ex(credentials_object, grpc_ce_channel_credentials);
   wrapped_grpc_channel_credentials *credentials =
     Z_WRAPPED_GRPC_CHANNEL_CREDS_P(credentials_object);
   credentials->wrapped = wrapped;
 }
 
- /**
-  * Set default roots pem.
-  * @param string pem_roots PEM encoding of the server root certificates
-  * @return void
-  */
+/**
+ * Set default roots pem.
+ * @param string pem_roots PEM encoding of the server root certificates
+ * @return void
+ */
 PHP_METHOD(ChannelCredentials, setDefaultRootsPem) {
-  char *pem_roots;
-  size_t pem_roots_length;
+  zend_string *pem_roots;
 
-#ifndef FAST_ZPP
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &pem_roots,
-                           &pem_roots_length)  == FAILURE) {
+  if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &pem_roots)  == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
-                         "setDefaultRootsPem expects 1 string", 1 TSRMLS_CC);
+                         "setDefaultRootsPem expects 1 string", 1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(1, 1)
-    Z_PARAM_STRING(pem_roots, pem_roots_length)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
-  default_pem_root_certs = gpr_malloc((pem_roots_length + 1) * sizeof(char));
-  memcpy(default_pem_root_certs, pem_roots, pem_roots_length + 1);
+  default_pem_root_certs =
+    gpr_malloc((ZSTR_LEN(pem_roots) + 1) * sizeof(char));
+  memcpy(default_pem_root_certs, ZSTR_VAL(pem_roots),
+         ZSTR_LEN(pem_roots) + 1);
 }
 
 /**
@@ -153,23 +142,13 @@ PHP_METHOD(ChannelCredentials, createSsl) {
   grpc_ssl_pem_key_cert_pair pem_key_cert_pair;
   pem_key_cert_pair.private_key = pem_key_cert_pair.cert_chain = NULL;
 
-  //TODO(thinkerou): add unittest 
   /* "|S!S!S! == 3 optional nullable strings */
-#ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "|S!S!S!", &pem_root_certs,
                             &private_key, &cert_chain) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "createSsl expects 3 optional strings", 1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(0, 3)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_STR_EX(pem_root_certs, 1, 0)
-    Z_PARAM_STR_EX(private_key, 1, 0)
-    Z_PARAM_STR_EX(cert_chain, 1, 0)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
   if (private_key) {
     pem_key_cert_pair.private_key = ZSTR_VAL(private_key);
@@ -178,9 +157,11 @@ PHP_METHOD(ChannelCredentials, createSsl) {
     pem_key_cert_pair.cert_chain = ZSTR_VAL(cert_chain);
   }
 
-  grpc_channel_credentials *creds = grpc_ssl_credentials_create(
-      pem_root_certs == NULL ? NULL : ZSTR_VAL(pem_root_certs),
-      pem_key_cert_pair.private_key == NULL ? NULL : &pem_key_cert_pair, NULL);
+  grpc_channel_credentials *creds =
+    grpc_ssl_credentials_create(pem_root_certs == NULL ? NULL :
+                                ZSTR_VAL(pem_root_certs),
+                                pem_key_cert_pair.private_key == NULL ?
+                                NULL : &pem_key_cert_pair, NULL);
   grpc_php_wrap_channel_credentials(creds, return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
@@ -196,7 +177,6 @@ PHP_METHOD(ChannelCredentials, createComposite) {
   zval *cred2_obj;
 
   /* "OO" == 2 Objects */
-#ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "OO", &cred1_obj,
                             grpc_ce_channel_credentials, &cred2_obj,
                             grpc_ce_call_credentials) == FAILURE) {
@@ -204,20 +184,14 @@ PHP_METHOD(ChannelCredentials, createComposite) {
                          "createComposite expects 2 Credentials", 1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_OBJECT_OF_CLASS(cred1_obj, grpc_ce_channel_credentials)
-    Z_PARAM_OBJECT_OF_CLASS(cred2_obj, grpc_ce_call_credentials)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
   wrapped_grpc_channel_credentials *cred1 =
-      Z_WRAPPED_GRPC_CHANNEL_CREDS_P(cred1_obj);
+    Z_WRAPPED_GRPC_CHANNEL_CREDS_P(cred1_obj);
   wrapped_grpc_call_credentials *cred2 =
-      Z_WRAPPED_GRPC_CALL_CREDS_P(cred2_obj);
+    Z_WRAPPED_GRPC_CALL_CREDS_P(cred2_obj);
   grpc_channel_credentials *creds =
-      grpc_composite_channel_credentials_create(cred1->wrapped,
-                                                cred2->wrapped, NULL);
+    grpc_composite_channel_credentials_create(cred1->wrapped,
+                                              cred2->wrapped, NULL);
   grpc_php_wrap_channel_credentials(creds, return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
@@ -251,11 +225,11 @@ void grpc_init_channel_credentials() {
   grpc_set_ssl_roots_override_callback(get_ssl_roots_override);
   ce.create_object = create_wrapped_grpc_channel_credentials;
   grpc_ce_channel_credentials = zend_register_internal_class(&ce);
-  memcpy(&channel_creds_object_handlers_channel_creds,
+  memcpy(&channel_credentials_ce_handlers,
          zend_get_std_object_handlers(),
          sizeof(zend_object_handlers));
-  channel_creds_object_handlers_channel_creds.offset =
+  channel_credentials_ce_handlers.offset =
     XtOffsetOf(wrapped_grpc_channel_credentials, std);
-  channel_creds_object_handlers_channel_creds.free_obj =
+  channel_credentials_ce_handlers.free_obj =
     free_wrapped_grpc_channel_credentials;
 }

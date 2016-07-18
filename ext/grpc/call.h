@@ -55,9 +55,10 @@ typedef struct wrapped_grpc_call {
   zend_object std;
 } wrapped_grpc_call;
 
-static inline wrapped_grpc_call *wrapped_grpc_call_from_obj(zend_object *obj) {
-    return (wrapped_grpc_call*)(
-        (char*)(obj) - XtOffsetOf(wrapped_grpc_call, std));
+static inline wrapped_grpc_call
+*wrapped_grpc_call_from_obj(zend_object *obj) {
+  return (wrapped_grpc_call*)((char*)(obj) -
+                              XtOffsetOf(wrapped_grpc_call, std));
 }
 
 #define Z_WRAPPED_GRPC_CALL_P(zv) wrapped_grpc_call_from_obj(Z_OBJ_P((zv)))
@@ -70,7 +71,8 @@ void grpc_php_wrap_call(grpc_call *wrapped, bool owned, zval *call_object);
 
 /* Creates and returns a PHP associative array of metadata from a C array of
  * call metadata */
-void grpc_parse_metadata_array(grpc_metadata_array *metadata_array, zval *array);
+void grpc_parse_metadata_array(grpc_metadata_array *metadata_array,
+                               zval *array);
 
 /* Populates a grpc_metadata_array with the data in a PHP array object.
    Returns true on success and false on failure */

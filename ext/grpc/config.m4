@@ -4,10 +4,6 @@ PHP_ARG_ENABLE(grpc, whether to enable grpc support,
 PHP_ARG_ENABLE(coverage, whether to include code coverage symbols,
 [  --enable-coverage       Enable coverage support], no, no)
 
-PHP_ARG_WITH(grpc, for grpc support,
-Make sure that the comment is aligned:
-[  --with-grpc             Include grpc support ])
-
 if test "$PHP_GRPC" != "no"; then
   dnl Write more examples of tests here...
 
@@ -80,7 +76,7 @@ if test "$PHP_GRPC" != "no"; then
 
   PHP_NEW_EXTENSION(grpc, byte_buffer.c call.c call_credentials.c channel.c \
     channel_credentials.c completion_queue.c timeval.c server.c \
-    server_credentials.c php_grpc.c, $ext_shared, , -Wall -Werror -std=c11)
+    server_credentials.c php_grpc.c, $ext_shared, , -Wall -Werror -Wno-maybe-uninitialized -std=c11)
 fi
 
 if test "$PHP_COVERAGE" = "yes"; then
@@ -144,11 +140,4 @@ if test "$PHP_COVERAGE" = "yes"; then
   dnl Add the special gcc flags
   CFLAGS="$CFLAGS -O0 -ggdb -fprofile-arcs -ftest-coverage"
   CXXFLAGS="$CXXFLAGS -ggdb -O0 -fprofile-arcs -ftest-coverage"
-fi
-
-if test -z "$PHP_DEBUG"; then
-  AC_ARG_ENABLE(debug,
-    [--enable-debug  compile with debugging system],
-    [PHP_DEBUG=$enableval], [PHP_DEBUG=no]
-  )
 fi
