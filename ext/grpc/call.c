@@ -252,7 +252,8 @@ PHP_METHOD(Call, __construct) {
   wrapped_grpc_timeval *deadline = Z_WRAPPED_GRPC_TIMEVAL_P(deadline_obj);
   call->wrapped = grpc_channel_create_call(
       channel->wrapped, NULL, GRPC_PROPAGATE_DEFAULTS, completion_queue,
-      ZSTR_VAL(method), ZSTR_VAL(host_override), deadline->wrapped, NULL);
+      ZSTR_VAL(method), host_override == NULL ? NULL : ZSTR_VAL(host_override),
+      deadline->wrapped, NULL);
   call->owned = true;
 }
 
@@ -467,10 +468,12 @@ PHP_METHOD(Call, startBatch) {
       case GRPC_OP_RECV_INITIAL_METADATA:
         grpc_parse_metadata_array(&recv_metadata, array);
         add_property_zval(return_value, "metadata", array);
-        //TODO(thinkerou): why crash?
-        //if (array && Z_REFCOUNT_P(array) > 0) {
-        //  Z_DELREF_P(array);
-        //}
+        //TODO(thinkerou): right?
+        /*if (Z_REFCOUNT_P(array) == 1) {
+          ZVAL_UNREF(array);
+        } else {
+          Z_DELREF_P(array);
+        }*/
         break;
       case GRPC_OP_RECV_MESSAGE:
         byte_buffer_to_string(message, &message_str, &message_len);
@@ -484,10 +487,12 @@ PHP_METHOD(Call, startBatch) {
         object_init(&recv_status);
         grpc_parse_metadata_array(&recv_trailing_metadata, array);
         add_property_zval(&recv_status, "metadata", array);
-        //TODO(thinkerou): why crash?
-        //if (array && Z_REFCOUNT_P(array) > 0) {
-        //  Z_DELREF_P(array);
-        //}
+        //TODO(thinkerou): right?
+        /*if (Z_REFCOUNT_P(array) == 1) {
+          ZVAL_UNREF(array);
+        } else {
+          Z_DELREF_P(array);
+        }*/
         add_property_long(&recv_status, "code", status);
         add_property_string(&recv_status, "details", status_details);
         add_property_zval(return_value, "status", &recv_status);
