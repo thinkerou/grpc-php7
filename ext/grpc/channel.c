@@ -56,8 +56,7 @@
 #include "timeval.h"
 
 zend_class_entry *grpc_ce_channel;
-
-static zend_object_handlers channel_object_handlers_channel;
+static zend_object_handlers channel_ce_handlers;
 
 /* Frees and destroys an instance of wrapped_grpc_channel */
 static void free_wrapped_grpc_channel(zend_object *object) {
@@ -74,22 +73,17 @@ zend_object *create_wrapped_grpc_channel(zend_class_entry *class_type) {
   wrapped_grpc_channel *intern;
   intern = ecalloc(1, sizeof(wrapped_grpc_channel) +
                    zend_object_properties_size(class_type));
-  
   zend_object_std_init(&intern->std, class_type);
   object_properties_init(&intern->std, class_type);
-
-  intern->std.handlers = &channel_object_handlers_channel;
-  
+  intern->std.handlers = &channel_ce_handlers;
   return &intern->std;
 }
 
 void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
   HashTable *array_hash;
-  //HashPosition array_pointer;
   int args_index;
   zval *data;
   zend_string *key;
-  //zend_ulong index;
   array_hash = HASH_OF(args_array);
   if (!array_hash) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
@@ -100,34 +94,24 @@ void php_grpc_read_args_array(zval *args_array, grpc_channel_args *args) {
   args->args = ecalloc(args->num_args, sizeof(grpc_arg));
   args_index = 0;
   ZEND_HASH_FOREACH_STR_KEY_VAL(array_hash, key, data) {
-  /*for (zend_hash_internal_pointer_reset_ex(array_hash, &array_pointer);
-       (data = zend_hash_get_current_data_ex(array_hash,
-                                             &array_pointer)) != NULL;
-       zend_hash_move_forward_ex(array_hash, &array_pointer)) {
-    if (zend_hash_get_current_key_ex(array_hash, &key, &index,
-                                     &array_pointer) != HASH_KEY_IS_STRING) {
-      zend_throw_exception(spl_ce_InvalidArgumentException,
-                           "args keys must be strings", 1);
-      return;
-    }*/
     if (key == NULL) {
       zend_throw_exception(spl_ce_InvalidArgumentException,
                            "args keys must be strings", 1);
     }
     args->args[args_index].key = ZSTR_VAL(key);
     switch (Z_TYPE_P(data)) {
-      case IS_LONG:
-        args->args[args_index].value.integer = (int)Z_LVAL_P(data);
-        args->args[args_index].type = GRPC_ARG_INTEGER;
-        break;
-      case IS_STRING:
-        args->args[args_index].value.string = Z_STRVAL_P(data);
-        args->args[args_index].type = GRPC_ARG_STRING;
-        break;
-      default:
-        zend_throw_exception(spl_ce_InvalidArgumentException,
-                             "args values must be int or string", 1);
-        return;
+    case IS_LONG:
+      args->args[args_index].value.integer = (int)Z_LVAL_P(data);
+      args->args[args_index].type = GRPC_ARG_INTEGER;
+      break;
+    case IS_STRING:
+      args->args[args_index].value.string = Z_STRVAL_P(data);
+      args->args[args_index].type = GRPC_ARG_STRING;
+      break;
+    default:
+      zend_throw_exception(spl_ce_InvalidArgumentException,
+                           "args values must be int or string", 1);
+      return;
     }
     args_index++;
   } ZEND_HASH_FOREACH_END();
@@ -150,19 +134,12 @@ PHP_METHOD(Channel, __construct) {
   wrapped_grpc_channel_credentials *creds = NULL;
 
   /* "Sa" == 1 string, 1 array */
-#ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "Sa", &target, &args_array)
       == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "Channel expects a string and an array", 1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_STR(target)
-    Z_PARAM_ARRAY(args_array)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
   array_hash = HASH_OF(args_array);
   if ((creds_obj = zend_hash_str_find(array_hash, "credentials",
@@ -186,8 +163,8 @@ PHP_METHOD(Channel, __construct) {
                                                     &args, NULL);
   } else {
     channel->wrapped =
-        grpc_secure_channel_create(creds->wrapped, ZSTR_VAL(target),
-                                   &args, NULL);
+      grpc_secure_channel_create(creds->wrapped, ZSTR_VAL(target),
+                                 &args, NULL);
   }
   efree(args.args);
 }
@@ -211,19 +188,12 @@ PHP_METHOD(Channel, getConnectivityState) {
   zend_bool try_to_connect = 0;
 
   /* "|b" == 1 optional bool */
-#ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "|b",
                             &try_to_connect) == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
                          "getConnectivityState expects a bool", 1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(0, 1)
-    Z_PARAM_OPTIONAL
-    Z_PARAM_BOOL(try_to_connect)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
   RETURN_LONG(grpc_channel_check_connectivity_state(channel->wrapped,
                                                     (int)try_to_connect));
@@ -242,27 +212,23 @@ PHP_METHOD(Channel, watchConnectivityState) {
   zval *deadline_obj;
 
   /* "lO" == 1 long 1 object */
-#ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "lO",
-          &last_state, &deadline_obj, grpc_ce_timeval) == FAILURE) {
+                            &last_state, &deadline_obj, grpc_ce_timeval)
+      == FAILURE) {
     zend_throw_exception(spl_ce_InvalidArgumentException,
-        "watchConnectivityState expects 1 long 1 timeval", 1);
+                         "watchConnectivityState expects 1 long 1 timeval",
+                         1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_LONG(last_state)
-    Z_PARAM_OBJECT_OF_CLASS(deadline_obj, grpc_ce_timeval)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
   wrapped_grpc_timeval *deadline = Z_WRAPPED_GRPC_TIMEVAL_P(deadline_obj);
-  grpc_channel_watch_connectivity_state(
-      channel->wrapped, (grpc_connectivity_state)last_state,
-      deadline->wrapped, completion_queue, NULL);
-  grpc_event event = grpc_completion_queue_pluck(
-      completion_queue, NULL,
-      gpr_inf_future(GPR_CLOCK_REALTIME), NULL);
+  grpc_channel_watch_connectivity_state(channel->wrapped,
+                                        (grpc_connectivity_state)last_state,
+                                        deadline->wrapped, completion_queue,
+                                        NULL);
+  grpc_event event =
+    grpc_completion_queue_pluck(completion_queue, NULL,
+                                gpr_inf_future(GPR_CLOCK_REALTIME), NULL);
   RETURN_BOOL(event.success);
 }
 
@@ -278,12 +244,12 @@ PHP_METHOD(Channel, close) {
 }
 
 static zend_function_entry channel_methods[] = {
-    PHP_ME(Channel, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    PHP_ME(Channel, getTarget, NULL, ZEND_ACC_PUBLIC)
-    PHP_ME(Channel, getConnectivityState, NULL, ZEND_ACC_PUBLIC)
-    PHP_ME(Channel, watchConnectivityState, NULL, ZEND_ACC_PUBLIC)
-    PHP_ME(Channel, close, NULL, ZEND_ACC_PUBLIC)
-    PHP_FE_END
+  PHP_ME(Channel, __construct, NULL, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+  PHP_ME(Channel, getTarget, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(Channel, getConnectivityState, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(Channel, watchConnectivityState, NULL, ZEND_ACC_PUBLIC)
+  PHP_ME(Channel, close, NULL, ZEND_ACC_PUBLIC)
+  PHP_FE_END
 };
 
 void grpc_init_channel() {
@@ -291,9 +257,9 @@ void grpc_init_channel() {
   INIT_CLASS_ENTRY(ce, "Grpc\\Channel", channel_methods);
   ce.create_object = create_wrapped_grpc_channel;
   grpc_ce_channel = zend_register_internal_class(&ce);
-  memcpy(&channel_object_handlers_channel, zend_get_std_object_handlers(),
+  memcpy(&channel_ce_handlers, zend_get_std_object_handlers(),
          sizeof(zend_object_handlers));
-  channel_object_handlers_channel.offset =
+  channel_ce_handlers.offset =
     XtOffsetOf(wrapped_grpc_channel, std);
-  channel_object_handlers_channel.free_obj = free_wrapped_grpc_channel;
+  channel_ce_handlers.free_obj = free_wrapped_grpc_channel;
 }

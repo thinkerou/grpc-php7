@@ -65,6 +65,7 @@ void byte_buffer_to_string(grpc_byte_buffer *buffer, char **out_string,
     *out_length = 0;
     return;
   }
+
   gpr_slice slice = grpc_byte_buffer_reader_readall(&reader);
   size_t length = GPR_SLICE_LENGTH(slice);
   char *string = ecalloc(length + 1, sizeof(char));

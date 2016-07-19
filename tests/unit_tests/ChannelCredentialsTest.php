@@ -42,18 +42,6 @@ class ChanellCredentialsTest extends PHPUnit_Framework_TestCase
     {
     }
 
-    public function setErrorHandler()
-    {
-        set_error_handler(
-            function($errno, $errstr, $errfile, $errline, array $errcontext) {
-                if (0 === error_reporting()) {
-                    return false;
-                }
-                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
-            }
-        );
-    }
-
     public function testCreateDefault()
     {
         $channel_credentials = Grpc\ChannelCredentials::createDefault();
@@ -61,20 +49,18 @@ class ChanellCredentialsTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException ErrorException
+     * @expectedException InvalidArgumentException
      */
     public function testInvalidCreateSsl()
     {
-        $this->setErrorHandler();
         $channel_credentials = Grpc\ChannelCredentials::createSsl([]);
     }
 
     /**
-     * @expectedException ErrorException
+     * @expectedException InvalidArgumentException
      */
     public function testInvalidCreateComposite()
     {
-        $this->setErrorHandler();
         $channel_credentials = Grpc\ChannelCredentials::createComposite(
             'something', 'something');
     }
@@ -83,5 +69,14 @@ class ChanellCredentialsTest extends PHPUnit_Framework_TestCase
     {
         $channel_credentials = Grpc\ChannelCredentials::createInsecure();
         $this->assertNull($channel_credentials);
+    }
+
+    public function testSetDefaultRootsPem()
+    {
+        $ssl_roots = file_get_contents(
+            dirname(__FILE__).'/../../../../etc/roots.pem');
+        Grpc\ChannelCredentials::setDefaultRootsPem($ssl_roots);
+        $channel_credentials = Grpc\ChannelCredentials::createDefault();
+        $this->assertSame('Grpc\ChannelCredentials', get_class($channel_credentials));
     }
 }

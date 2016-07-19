@@ -55,14 +55,14 @@ typedef struct wrapped_grpc_timeval {
   zend_object std;
 } wrapped_grpc_timeval;
 
-static inline wrapped_grpc_timeval *wrapped_grpc_timeval_from_obj(
-    zend_object *obj) {
-    return (wrapped_grpc_timeval*)(
-        (char*)(obj) - XtOffsetOf(wrapped_grpc_timeval, std));
+static inline wrapped_grpc_timeval
+*wrapped_grpc_timeval_from_obj(zend_object *obj) {
+  return (wrapped_grpc_timeval*)((char*)(obj) -
+                                 XtOffsetOf(wrapped_grpc_timeval, std));
 }
 
-#define Z_WRAPPED_GRPC_TIMEVAL_P(zv) \
-        wrapped_grpc_timeval_from_obj(Z_OBJ_P((zv)))
+#define Z_WRAPPED_GRPC_TIMEVAL_P(zv)            \
+  wrapped_grpc_timeval_from_obj(Z_OBJ_P((zv)))
 
 /* Initialize the Timeval PHP class */
 void grpc_init_timeval();

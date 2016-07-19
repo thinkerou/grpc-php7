@@ -54,14 +54,14 @@ typedef struct wrapped_grpc_server {
   zend_object std;
 } wrapped_grpc_server;
 
-static inline wrapped_grpc_server *wrapped_grpc_server_from_obj(
-    zend_object *obj) {
-    return (wrapped_grpc_server*)(
-        (char*)(obj) - XtOffsetOf(wrapped_grpc_server, std));
+static inline wrapped_grpc_server
+*wrapped_grpc_server_from_obj(zend_object *obj) {
+  return (wrapped_grpc_server*)((char*)(obj) -
+                                XtOffsetOf(wrapped_grpc_server, std));
 }
 
-#define Z_WRAPPED_GRPC_SERVER_P(zv) \
-        wrapped_grpc_server_from_obj(Z_OBJ_P((zv)))
+#define Z_WRAPPED_GRPC_SERVER_P(zv)             \
+  wrapped_grpc_server_from_obj(Z_OBJ_P((zv)))
 
 /* Initializes the Server class */
 void grpc_init_server();

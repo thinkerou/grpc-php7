@@ -54,14 +54,14 @@ typedef struct wrapped_grpc_channel {
   zend_object std;
 } wrapped_grpc_channel;
 
-static inline wrapped_grpc_channel *wrapped_grpc_channel_from_obj(
-    zend_object *obj) {
-    return (wrapped_grpc_channel*)(
-        (char*)(obj) - XtOffsetOf(wrapped_grpc_channel, std));
+static inline wrapped_grpc_channel
+*wrapped_grpc_channel_from_obj(zend_object *obj) {
+  return (wrapped_grpc_channel*)((char*)(obj) -
+                                 XtOffsetOf(wrapped_grpc_channel, std));
 }
 
-#define Z_WRAPPED_GRPC_CHANNEL_P(zv) \
-        wrapped_grpc_channel_from_obj(Z_OBJ_P((zv)))
+#define Z_WRAPPED_GRPC_CHANNEL_P(zv)            \
+  wrapped_grpc_channel_from_obj(Z_OBJ_P((zv)))
 
 /* Initializes the Channel class */
 void grpc_init_channel();

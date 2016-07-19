@@ -56,15 +56,16 @@ typedef struct wrapped_grpc_channel_credentials {
   zend_object std;
 } wrapped_grpc_channel_credentials;
 
-static inline
-wrapped_grpc_channel_credentials *wrapped_grpc_channel_creds_from_obj(
-    zend_object *obj) {
-    return (wrapped_grpc_channel_credentials*)(
-        (char*)(obj) - XtOffsetOf(wrapped_grpc_channel_credentials, std));
+static inline wrapped_grpc_channel_credentials
+*wrapped_grpc_channel_creds_from_obj(zend_object *obj) {
+  return
+    (wrapped_grpc_channel_credentials *)
+    ((char*)(obj) -
+     XtOffsetOf(wrapped_grpc_channel_credentials, std));
 }
 
-#define Z_WRAPPED_GRPC_CHANNEL_CREDS_P(zv) \
-        wrapped_grpc_channel_creds_from_obj(Z_OBJ_P((zv)))
+#define Z_WRAPPED_GRPC_CHANNEL_CREDS_P(zv)            \
+  wrapped_grpc_channel_creds_from_obj(Z_OBJ_P((zv)))
 
 /* Initializes the ChannelCredentials PHP class */
 void grpc_init_channel_credentials();

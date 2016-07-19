@@ -52,8 +52,7 @@
 #include <grpc/grpc_security.h>
 
 zend_class_entry *grpc_ce_call_credentials;
-
-static zend_object_handlers call_creds_object_handlers_call_creds;
+static zend_object_handlers call_credentials_ce_handlers;
 
 /* Frees and destroys an instance of wrapped_grpc_call_credentials */
 static void free_wrapped_grpc_call_credentials(zend_object *object) {
@@ -67,17 +66,14 @@ static void free_wrapped_grpc_call_credentials(zend_object *object) {
 
 /* Initializes an instance of wrapped_grpc_call_credentials to be
  * associated with an object of a class specified by class_type */
-zend_object *create_wrapped_grpc_call_credentials(
-    zend_class_entry *class_type) {
+zend_object *create_wrapped_grpc_call_credentials(zend_class_entry
+                                                  *class_type) {
   wrapped_grpc_call_credentials *intern;
   intern = ecalloc(1, sizeof(wrapped_grpc_call_credentials) +
                    zend_object_properties_size(class_type));
-  
   zend_object_std_init(&intern->std, class_type);
   object_properties_init(&intern->std, class_type);
-  
-  intern->std.handlers = &call_creds_object_handlers_call_creds;
-  
+  intern->std.handlers = &call_credentials_ce_handlers;
   return &intern->std;
 }
 
@@ -100,7 +96,6 @@ PHP_METHOD(CallCredentials, createComposite) {
   zval *cred2_obj;
 
   /* "OO" == 2 Objects */
-#ifndef FAST_ZPP
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "OO", &cred1_obj,
                             grpc_ce_call_credentials, &cred2_obj,
                             grpc_ce_call_credentials) == FAILURE) {
@@ -108,18 +103,14 @@ PHP_METHOD(CallCredentials, createComposite) {
                          "createComposite expects 2 CallCredentials", 1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(2, 2)
-    Z_PARAM_OBJECT_OF_CLASS(cred1_obj, grpc_ce_call_credentials)
-    Z_PARAM_OBJECT_OF_CLASS(cred2_obj, grpc_ce_call_credentials)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
-  wrapped_grpc_call_credentials *cred1 = Z_WRAPPED_GRPC_CALL_CREDS_P(cred1_obj);
-  wrapped_grpc_call_credentials *cred2 = Z_WRAPPED_GRPC_CALL_CREDS_P(cred2_obj);
+  wrapped_grpc_call_credentials *cred1 =
+    Z_WRAPPED_GRPC_CALL_CREDS_P(cred1_obj);
+  wrapped_grpc_call_credentials *cred2 =
+    Z_WRAPPED_GRPC_CALL_CREDS_P(cred2_obj);
   grpc_call_credentials *creds =
-      grpc_composite_call_credentials_create(cred1->wrapped,
-                                             cred2->wrapped, NULL);
+    grpc_composite_call_credentials_create(cred1->wrapped,
+                                           cred2->wrapped, NULL);
   grpc_php_wrap_call_credentials(creds, return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
@@ -139,7 +130,6 @@ PHP_METHOD(CallCredentials, createFromPlugin) {
   memset(fci_cache, 0, sizeof(zend_fcall_info_cache));
 
   /* "f" == 1 function */
-#ifndef FAST_ZPP 
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "f", fci,
                             fci_cache, fci->params,
                             fci->param_count) == FAILURE) {
@@ -147,12 +137,6 @@ PHP_METHOD(CallCredentials, createFromPlugin) {
                          "createFromPlugin expects 1 callback", 1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(1, -1)
-    Z_PARAM_FUNC(*fci, *fci_cache)
-    Z_PARAM_VARIADIC("*", fci->params, fci->param_count)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
   plugin_state *state;
   state = (plugin_state *)emalloc(sizeof(plugin_state));
@@ -168,8 +152,8 @@ PHP_METHOD(CallCredentials, createFromPlugin) {
   plugin.state = (void *)state;
   plugin.type = "";
 
-  grpc_call_credentials *creds = grpc_metadata_credentials_create_from_plugin(
-      plugin, NULL);
+  grpc_call_credentials *creds =
+    grpc_metadata_credentials_create_from_plugin(plugin, NULL);
   grpc_php_wrap_call_credentials(creds, return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
@@ -236,11 +220,11 @@ void grpc_init_call_credentials() {
   INIT_CLASS_ENTRY(ce, "Grpc\\CallCredentials", call_credentials_methods);
   ce.create_object = create_wrapped_grpc_call_credentials;
   grpc_ce_call_credentials = zend_register_internal_class(&ce);
-  memcpy(&call_creds_object_handlers_call_creds,
+  memcpy(&call_credentials_ce_handlers,
          zend_get_std_object_handlers(),
          sizeof(zend_object_handlers));
-  call_creds_object_handlers_call_creds.offset =
+  call_credentials_ce_handlers.offset =
     XtOffsetOf(wrapped_grpc_call_credentials, std);
-  call_creds_object_handlers_call_creds.free_obj =
+  call_credentials_ce_handlers.free_obj =
     free_wrapped_grpc_call_credentials;
 }

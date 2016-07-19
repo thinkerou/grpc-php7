@@ -51,7 +51,7 @@
 
 zend_class_entry *grpc_ce_server_credentials;
 
-static zend_object_handlers server_creds_object_handlers_server_creds;
+static zend_object_handlers server_credentials_ce_handlers;
 
 /* Frees and destroys an instace of wrapped_grpc_server_credentials */
 static void free_wrapped_grpc_server_credentials(zend_object *object) {
@@ -65,17 +65,14 @@ static void free_wrapped_grpc_server_credentials(zend_object *object) {
 
 /* Initializes an instace of wrapped_grpc_server_credentials to be associated
  * with an object of a class specified by class_type */
-zend_object *create_wrapped_grpc_server_credentials(
-    zend_class_entry *class_type) {
+zend_object *create_wrapped_grpc_server_credentials(zend_class_entry
+                                                    *class_type) {
   wrapped_grpc_server_credentials *intern;
   intern = ecalloc(1, sizeof(wrapped_grpc_server_credentials) +
                    zend_object_properties_size(class_type));
-
   zend_object_std_init(&intern->std, class_type);
   object_properties_init(&intern->std, class_type);
-  
-  intern->std.handlers = &server_creds_object_handlers_server_creds;
-  
+  intern->std.handlers = &server_credentials_ce_handlers;
   return &intern->std;
 }
 
@@ -98,11 +95,10 @@ PHP_METHOD(ServerCredentials, createSsl) {
   zend_string *pem_root_certs = NULL;
   zend_string *private_key;
   zend_string *cert_chain;
- 
+
   grpc_ssl_pem_key_cert_pair pem_key_cert_pair;
 
   /* "S!SS" == 1 nullable string, 2 strings */
-#ifndef FAST_ZPP
   /* TODO: support multiple key cert pairs. */
   if (zend_parse_parameters(ZEND_NUM_ARGS(), "S!SS", &pem_root_certs,
                             &private_key, &cert_chain) == FAILURE) {
@@ -110,34 +106,29 @@ PHP_METHOD(ServerCredentials, createSsl) {
                          "createSsl expects 3 strings", 1);
     return;
   }
-#else
-  ZEND_PARSE_PARAMETERS_START(3, 3)
-    Z_PARAM_STR_EX(pem_root_certs, 1, 0)
-    Z_PARAM_STR(private_key)
-    Z_PARAM_STR(cert_chain)
-  ZEND_PARSE_PARAMETERS_END();
-#endif
 
   if (private_key) {
     pem_key_cert_pair.private_key = ZSTR_VAL(private_key);
   }
   if (cert_chain) {
-      pem_key_cert_pair.cert_chain = ZSTR_VAL(cert_chain);
+    pem_key_cert_pair.cert_chain = ZSTR_VAL(cert_chain);
   }
   /* TODO: add a client_certificate_request field in ServerCredentials and pass
    * it as the last parameter. */
-  grpc_server_credentials *creds = grpc_ssl_server_credentials_create_ex(
-      pem_root_certs == NULL ? NULL : ZSTR_VAL(pem_root_certs),
-      &pem_key_cert_pair, 1,
-      GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, NULL);
+  grpc_server_credentials *creds =
+    grpc_ssl_server_credentials_create_ex(
+        pem_root_certs == NULL ? NULL :
+        ZSTR_VAL(pem_root_certs),
+        &pem_key_cert_pair, 1,
+        GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE, NULL);
   grpc_php_wrap_server_credentials(creds, return_value);
   RETURN_DESTROY_ZVAL(return_value);
 }
 
 static zend_function_entry server_credentials_methods[] = {
-    PHP_ME(ServerCredentials, createSsl, NULL,
-           ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
-    PHP_FE_END
+  PHP_ME(ServerCredentials, createSsl, NULL,
+         ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
+  PHP_FE_END
 };
 
 void grpc_init_server_credentials() {
@@ -145,11 +136,11 @@ void grpc_init_server_credentials() {
   INIT_CLASS_ENTRY(ce, "Grpc\\ServerCredentials", server_credentials_methods);
   ce.create_object = create_wrapped_grpc_server_credentials;
   grpc_ce_server_credentials = zend_register_internal_class(&ce);
-  memcpy(&server_creds_object_handlers_server_creds, 
+  memcpy(&server_credentials_ce_handlers,
          zend_get_std_object_handlers(),
          sizeof(zend_object_handlers));
-  server_creds_object_handlers_server_creds.offset = 
+  server_credentials_ce_handlers.offset =
     XtOffsetOf(wrapped_grpc_server_credentials, std);
-  server_creds_object_handlers_server_creds.free_obj =
+  server_credentials_ce_handlers.free_obj =
     free_wrapped_grpc_server_credentials;
 }
