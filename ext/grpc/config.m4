@@ -76,7 +76,7 @@ if test "$PHP_GRPC" != "no"; then
 
   PHP_NEW_EXTENSION(grpc, byte_buffer.c call.c call_credentials.c channel.c \
     channel_credentials.c completion_queue.c timeval.c server.c \
-    server_credentials.c php_grpc.c, $ext_shared, , -Wall -Werror -Wno-maybe-uninitialized -std=c11)
+    server_credentials.c php_grpc.c, $ext_shared, , -Wall -Werror -Wno-uninitialized -std=c11)
 fi
 
 if test "$PHP_COVERAGE" = "yes"; then

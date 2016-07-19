@@ -42,43 +42,28 @@ class ServerTest extends PHPUnit_Framework_TestCase
     {
     }
 
-    public function setErrorHandler()
-    {
-        set_error_handler(
-            function($errno, $errstr, $errfile, $errline, array $errcontext) {
-                if (0 === error_reporting()) {
-                    return false;
-                }
-                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
-            }
-        );
-    }
-
     /**
-     * @expectedException ErrorException
+     * @expectedException InvalidArgumentException
      */
     public function testInvalidConstructor()
     {
-        $this->setErrorHandler();
         $server = new Grpc\Server('invalid_host');
     }
 
     /**
-     * @expectedException ErrorException
+     * @expectedException InvalidArgumentException
      */
     public function testInvalidAddHttp2Port()
     {
-        $this->setErrorHandler();
         $this->server = new Grpc\Server([]);
         $this->port = $this->server->addHttp2Port(['0.0.0.0:0']);
     }
 
     /**
-     * @expectedException ErrorException
+     * @expectedException InvalidArgumentException
      */
     public function testInvalidAddSecureHttp2Port()
     {
-        $this->setErrorHandler();
         $this->server = new Grpc\Server([]);
         $this->port = $this->server->addSecureHttp2Port(['0.0.0.0:0']);
     }

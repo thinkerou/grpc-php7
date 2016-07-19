@@ -69,18 +69,6 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
         unset($this->server);
     }
 
-    public function setErrorHandler()
-    {
-        set_error_handler(
-            function($errno, $errstr, $errfile, $errline, array $errcontext) {
-                if (0 === error_reporting()) {
-                    return false;
-                }
-                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
-            }
-        );
-    }
-
     public function callbackFunc($context)
     {
         $this->assertTrue(is_string($context->service_url));
@@ -164,22 +152,20 @@ class CallCredentialsTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException ErrorException
+     * @expectedException InvalidArgumentException
      */
     public function testCreateFromPluginInvalidParam()
     {
-        $this->setErrorHandler();
         $call_credentials = Grpc\CallCredentials::createFromPlugin(
             'callbackFunc'
         );
     }
 
     /**
-     * @expectedException ErrorException
+     * @expectedException InvalidArgumentException
      */
     public function testCreateCompositeInvalidParam()
     {
-        $this->setErrorHandler();
         $call_credentials3 = Grpc\CallCredentials::createComposite(
             $this->call_credentials,
             $this->credentials
