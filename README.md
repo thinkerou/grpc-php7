@@ -1,4 +1,6 @@
-# grpc-php7-extension
+# The grpc-php7 have merged grpc/grpc official!
+
+## grpc-php7-extension
 
 ### REASON
 
