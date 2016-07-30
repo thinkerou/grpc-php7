@@ -261,7 +261,7 @@ class EndToEndTest extends PHPUnit_Framework_TestCase
             Grpc\OP_SEND_INITIAL_METADATA => [],
             Grpc\OP_SEND_CLOSE_FROM_CLIENT => true,
             Grpc\OP_SEND_MESSAGE => ['message' => 'abc',
-                                     'flags' => 'invalid'
+                                     'flags' => 'invalid',
                                     ],
         ]);
     }
