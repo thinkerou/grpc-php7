@@ -1,20 +1,10 @@
 # The grpc-php7 have merged grpc/grpc official!
 
-## grpc-php7-extension
+The repo have merged `grpc/grpc/src/php/ext/grpc`, please move here to read it.
 
-### REASON
+But the repo can still be used to learn `php7`.
 
-- The code forked from [grpc](https://github.com/grpc/grpc/tree/master/src/php).
+If you have anyway problem please commits issue to `grpc/grpc`.
 
-- Because the php extension only supports PHP5.x, and hopes it supports PHP7.
-
-- Not change the extension code original logic.
-
-
-### TODO
-
-- [ ] Add phpt test case
-- [X] Upgate phpunit, because added macro `ZEND_PARSE_PARAMETERS_START\END`
-- [ ] Check memory using Valgrind
-- [ ] Review code for checking `zval` or `zval*` for using right
+For making `grpc` supports `php7`, you may be want to []this info](https://github.com/thinkerou/grpc-php7/issues/4).
 
