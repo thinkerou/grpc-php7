@@ -1,6 +1,6 @@
-# The grpc-php7 have merged grpc/grpc official!
+# The repo have merged grpc/grpc!
 
-The repo have merged `grpc/grpc/src/php/ext/grpc`, please move here to read it.
+The repo have merged `grpc/grpc/src/php/ext/grpc`, please move [here](https://github.com/grpc/grpc/tree/master/src/php) to read it.
 
 But the repo can still be used to learn `php7`.
 
